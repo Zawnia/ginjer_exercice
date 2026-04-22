@@ -3,6 +3,7 @@
 
 ### pydev ###
 .pydevproject
+.memory/
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

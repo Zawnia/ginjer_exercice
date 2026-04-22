@@ -1,5 +1,6 @@
-from ginjer_exercice.llm.base import LLMProvider, LLMCallConfig, LLMMessage, LLMResponse, TraceContext
+from llm.base import LLMProvider, LLMCallConfig, LLMMessage, LLMResponse, TraceContext
 from pydantic import BaseModel
+import os
 from google import genai
 
 class GeminiProvider(LLMProvider):
