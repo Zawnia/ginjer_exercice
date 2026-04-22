@@ -8,7 +8,7 @@ from .base import LLMCallConfig, LLMMessage, LLMProvider, LLMResponse, TraceCont
 
 
 class OpenAIProvider(LLMProvider):
-        
+    
     def __init__(self, api_key: str | None = None):
         self.client = OpenAI(api_key=api_key)
 

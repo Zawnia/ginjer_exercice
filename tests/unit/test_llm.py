@@ -1,19 +1,38 @@
+import pytest
+from pydantic import BaseModel
+
+from ginjer_exercice.llm.base import LLMCallConfig, LLMMessage, LLMProvider
 from ginjer_exercice.llm.factory import get_provider
-from ginjer_exercice.llm.base import LLMProvider
 from ginjer_exercice.llm.gemini_provider import GeminiProvider
 from ginjer_exercice.llm.openai_provider import OpenAIProvider
-from ginjer_exercice.llm.base import LLMMessage, LLMCallConfig
-from pydantic import BaseModel
-import pytest
 
 class DummyResponseModel(BaseModel):
     name: str
     confidence: float
 
-def test_get_provider_gemini():
+def test_get_provider_gemini(monkeypatch):
+    # 1. On "fake" la variable d'environnement pour que le SDK Google soit content
+    monkeypatch.setenv("GEMINI_API_KEY", "cle_api_factice_pour_le_test")
+    
     provider = get_provider("gemini", use_vertex=False)
     assert isinstance(provider, GeminiProvider)
     assert provider.name == "Google AI Studio (Gemini)"
+    assert provider.supports_video is True
+
+def test_get_provider_gemini_vertex(monkeypatch):
+    # Pour Vertex, on fake un faux ID de projet
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "mon-faux-projet")
+    
+    # On "mock" genai.Client pour éviter l'erreur de credentials par défaut sur Vertex
+    import google.genai as genai
+    class DummyClient:
+        def __init__(self, **kwargs):
+            pass
+    monkeypatch.setattr(genai, "Client", DummyClient)
+    
+    provider = get_provider("gemini", use_vertex=True, project_id="dummy-project")
+    assert isinstance(provider, GeminiProvider)
+    assert provider.name == "Vertex AI (Gemini)"
     assert provider.supports_video is True
 
 def test_get_provider_openai():

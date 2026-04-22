@@ -347,7 +347,9 @@ Chaque implémentation (Gemini, OpenAI) :
 
 ## 7. Taxonomies
 
-### 7.1 Point d'entrée unique
+### 7.1 Point d'entrée unique et Taxonomie Canonique
+
+Le fichier `product_categorisation.json` est la **source de vérité canonique** de l'exercice pour l'ensemble des marques. Il s'agit d'un JSON Schema structuré.
 
 `taxonomy/loader.py` expose :
 
@@ -356,9 +358,8 @@ def load_taxonomy(brand: Brand, force_refresh: bool = False) -> BrandTaxonomy
 ```
 
 Logique interne :
-- **Dior / MFK** → lit le JSON fourni dans `data/taxonomies/`.
-- **Chanel** → si `data/taxonomies/chanel.json` existe et `not force_refresh`, le charge ; sinon appelle `chanel_deriver.derive_from_csv()` et persiste.
-- **LV / Balenciaga** → idem mais via `generator.generate_via_llm(brand)`.
+- **Par défaut (toutes les marques)** → charge la taxonomie canonique parsée depuis le schéma via `product_categorisation_parser.py`.
+- L'architecture permet des enrichissements optionnels par marque plus tard sans remettre en cause la source principale.
 - **Brand inconnue** → `UnsupportedBrandError`.
 
 ### 7.2 Stockage
@@ -528,15 +529,14 @@ Script d'init `scripts/seed_prompts.py` pour push les YAML vers Langfuse au prem
 
 ### Phase 3 — Taxonomies
 
-**Objectif** : `BrandTaxonomy` disponibles pour toutes les marques, via la bonne source.
+**Objectif** : Une `BrandTaxonomy` canonique basée sur la source de vérité pour toutes les marques.
 
 - `taxonomy/store.py` : load/save JSON + métadonnée.
-- `taxonomy/chanel_deriver.py` : CSV → arbre taxonomique.
-- `taxonomy/generator.py` : LLM → taxo (LV, Balenciaga).
-- `taxonomy/loader.py` : point d'entrée, dispatch par marque.
-- CLI : `refresh-taxonomy --brand <brand>`.
+- `taxonomy/product_categorisation_parser.py` : parse le `anyOf` de `product_categorisation.json` et extrait une taxonomie 3 niveaux.
+- `taxonomy/loader.py` : charge la taxonomie canonique et gère la persistence si nécessaire.
+- CLI : `refresh-taxonomy --brand ALL` pour forcer le parsing de la source canonique.
 
-**Checkpoint** : `load_taxonomy(Brand.CHANEL)` renvoie une taxo cohérente. Idem pour LV après refresh LLM.
+**Checkpoint** : `load_taxonomy(Brand.CHANEL)` renvoie la taxo canonique cohérente sans erreur. La CLI peut régénérer le fichier JSON interne.
 
 ### Phase 4 — Observability (Langfuse wiring)
 
