@@ -1,0 +1,894 @@
+{
+"prompt": "You are a luxury product advertising expert. You are asked to identify luxury products on ad creative, and only the products present on a given creative.\n**ANALYSIS METHODOLOGY - FOLLOW THIS ORDER:**\n1. **PRIMARY: Text & Link Analysis** - Start by thoroughly analyzing ALL provided text (titles, bodies, captions & links) to identify:\n   - Product names explicitly mentioned\n   - Product categories (e.g., if link mentions `mens`, it belongs to men universe)\n   - Product types (handbags, watches, perfume, etc.)\n   - Gender targeting (men's, women's, unisex)\n   - Specific product lines or collections mentioned\n2. **SECONDARY: Visual Refinement** - Use the image/video ONLY to:\n   - Confirm products identified in text are actually visible\n   - Determine visual prominence (0-5 scale)\n   - Identify colors of confirmed products\n   - Add any additional products that are prominently visible but not mentioned in text\n**IMPORTANT GUIDELINES:**\n- Text content takes PRIORITY over visual interpretation\n- If text mentions a product but it's not clearly visible, still include it (mark prominence as 1-2)\n- If text specifies gender (e.g., `men's cologne`), use that classification even if visual is ambiguous\n- Product names mentioned in text should ALWAYS be included in your analysis\n- Be careful that text may be associated with multiple creatives - focus on products that make sense for THIS specific creative\n**REMEMBER:** Some text content may be irrelevant to this specific creative, so use judgment to determine relevance.\nFor each identified product:\n1. Determine its prominence and importance (0-5 scale) - text mentions get minimum 1-2, visually prominent gets 3-5\n2. Identify its color (based on visual when visible)\n3. Categorize it according to the detailed taxonomy provided\n4. Include product name if explicitly mentioned in text\nFOCUS ON DETAILS: Prioritize text-mentioned products, then add any fashion items, accessories, beauty products, home goods, or other luxury items visible in the creative.\nFor skincare products, identify the specific need addressed (anti-aging, hydration, radiance, etc.) if mentioned in text or packaging.\nProvide a complete inventory prioritizing text-mentioned products, then visually confirmed products.",
+  "schema": {
+     "type": "object",
+     "title": "Luxury Products Catalog and Creative",
+     "required": [
+        "products"
+     ],
+     "properties": {
+        "products": {
+           "type": "array",
+           "items": {
+              "type": "object",
+              "required": [
+                 "product_importance",
+                 "product_color",
+                 "product_categorisation"
+              ],
+              "properties": {
+                 "product_name": {
+                    "type": "string",
+                    "description": "The name given by the brand to the product, ONLY IF it's explicitely named in the creative"
+                 },
+                 "product_importance": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 5,
+                    "description": "The prominence and visibility of the product in the ad, on a scale from 0 to 5. 5 indicates the product is the central focus and most prominent element of the ad; 4 means highly visible but not the sole focus; 3 indicates moderate visibility; 2 means the product is present but not emphasized; 1 means the product is minimally visible or referenced; 0 means no specific product is featured or mentioned."
+                 },
+                 "product_color": {
+                    "type": "string",
+                    "enum": [
+                       "Black",
+                       "White",
+                       "Navy",
+                       "Brown",
+                       "Beige",
+                       "Grey",
+                       "Red",
+                       "Blue",
+                       "Green",
+                       "Yellow",
+                       "Purple",
+                       "Pink",
+                       "Orange",
+                       "Gold",
+                       "Silver",
+                       "Multicolor"
+                    ]
+                 },
+                 "product_categorisation": {
+                    "anyOf": [
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men",
+                                   "Unisex"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Accessories"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Belts",
+                                   "Scarves",
+                                   "Hats",
+                                   "Gloves",
+                                   "Hair Accessories",
+                                   "Ties",
+                                   "Cufflinks",
+                                   "Pocket Squares",
+                                   "Key Rings & Bag Charms",
+                                   "Other Accessories"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men",
+                                   "Unisex"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Eyewear"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Sunglasses",
+                                   "Optical Frames",
+                                   "Limited Editions",
+                                   "Other Eyewear"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men",
+                                   "Unisex"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Small Leather Goods"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Wallets",
+                                   "Card Holders",
+                                   "Passport Holders",
+                                   "Pouches",
+                                   "Phone Pouches",
+                                   "Key Cases",
+                                   "Other Small Leather Goods"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Beachwear"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Cover-ups",
+                                   "Swim Shorts",
+                                   "Bikinis",
+                                   "One-piece",
+                                   "Flip-flops",
+                                   "Other Beachwear"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men",
+                                   "Unisex"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Beach Accessories"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Towels",
+                                   "Other Beach Accessories"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men"
+                                ],
+                                "description": "The gender of the model(s) wearing the bag"
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Bags"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Handbags",
+                                   "Totes",
+                                   "Crossbody/Shoulder Bag",
+                                   "Clutches",
+                                   "Backpacks",
+                                   "Straps",
+                                   "Mini Bags",
+                                   "Other Bags"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Unisex"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Travel Bags & Trunks"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Trunks & Boxes",
+                                   "Travel Bags",
+                                   "Rolling Luggage",
+                                   "Other Travel Bags & Trunks"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Shoes"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Heels",
+                                   "Flats",
+                                   "Sneakers",
+                                   "Ballerinas",
+                                   "Boots",
+                                   "Sandals",
+                                   "Loafers",
+                                   "Oxfords",
+                                   "Other Shoes"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Women",
+                                   "Men"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Ready-to-Wear"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Coats & Jackets",
+                                   "Sweaters & Cardigans",
+                                   "Shirts",
+                                   "T-shirts & Polos",
+                                   "Dresses",
+                                   "Skirts",
+                                   "Underwear & Socks",
+                                   "Pants",
+                                   "Shorts",
+                                   "Denim",
+                                   "Homewear",
+                                   "Other tops",
+                                   "Other bottoms",
+                                   "Other Ready-to-Wear"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Beauty"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Makeup"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Face",
+                                   "Eyes",
+                                   "Lips",
+                                   "Nails",
+                                   "Brushes & Tools",
+                                   "Other Makeup"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Beauty"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Skincare"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Cleansers",
+                                   "Creams",
+                                   "Moisturizers",
+                                   "Serums",
+                                   "Masks",
+                                   "Lotions",
+                                   "Eye Care",
+                                   "Sun Care",
+                                   "Men's Care",
+                                   "Other Skincare"
+                                ]
+                             },
+                             "need": {
+                                "type": "string",
+                                "enum": [
+                                   "anti-aging",
+                                   "hydration",
+                                   "radiance",
+                                   "unspecified"
+                                ],
+                                "description": "ONLY identify the specific skincare need if it is EXPLICITLY stated or shown in the ad (text, packaging, or voiceover). Choose 'unspecified' unless there is clear, direct evidence of the product's purpose. Do NOT make assumptions based on ingredients, product appearance, or brand reputation alone."
+                             }
+                          }
+                          
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Beauty"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Perfume"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Men's Perfume",
+                                   "Women's Perfume",
+                                   "Bath & Body",
+                                   "Kids' Perfume",
+                                   "Cologne",
+                                   "Travel Perfume Kit"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Watches & Jewelry"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Watches"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Luxury Watches",
+                                   "Sport Watches",
+                                   "Smart Watches",
+                                   "Objects of Time",
+                                   "Other Watches"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Watches & Jewelry"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Jewelry"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Necklaces",
+                                   "Rings",
+                                   "Bracelets",
+                                   "Earrings",
+                                   "Brooches",
+                                   "Customized Pieces",
+                                   "Other Jewelry"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Technology"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Audio",
+                                   "Mobile Devices",
+                                   "Photography",
+                                   "Wearables",
+                                   "Other Technology"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Headphones",
+                                   "Earbuds",
+                                   "Speakers",
+                                   "Turntables",
+                                   "Sound Systems",
+                                   "Other Audio",
+                                   "Smartphones",
+                                   "Tablets",
+                                   "E-readers",
+                                   "Mobile Accessories",
+                                   "Other Mobile Devices",
+                                   "Smartwatches",
+                                   "Fitness Trackers",
+                                   "Other Wearables",
+                                   "Cameras",
+                                   "Lenses",
+                                   "Camera Bags",
+                                   "Photo Accessories",
+                                   "Other Photography"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Kids & Baby"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Baby Girls",
+                                   "Baby Boys",
+                                   "Girls",
+                                   "Boys"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Clothing",
+                                   "Swimwear",
+                                   "Accessories",
+                                   "Shoes",
+                                   "Other Kids & Baby"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Kids & Baby"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Newborn"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Clothing",
+                                   "Toys",
+                                   "Accessories",
+                                   "Shoes",
+                                   "Other Newborn"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Art & Culture"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Art Objects",
+                                   "Books",
+                                   "Stationery",
+                                   "Other Art & Culture"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Pets"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Accessories",
+                                   "Clothing",
+                                   "Pet Home & Living",
+                                   "Other Pets"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Lifestyle"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Sports Equipment",
+                                   "Writing Instruments",
+                                   "Desk Accessories",
+                                   "Games"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Home"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Tableware"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Plates & Bowls",
+                                   "Glasses",
+                                   "Carafes",
+                                   "Tea & Coffee",
+                                   "Cutlery",
+                                   "Other Tableware"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Home"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Objects"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Candle & Candleholders",
+                                   "Trays",
+                                   "Other Objects"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Home"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Decor"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Baskets",
+                                   "Wallpapers",
+                                   "Vases",
+                                   "Other Decor"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Home"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Furniture"
+                                ]
+                             }
+                          }
+                       },
+                       {
+                          "type": "object",
+                          "required": [
+                             "universe",
+                             "category",
+                             "subcategory"
+                          ],
+                          "properties": {
+                             "universe": {
+                                "type": "string",
+                                "enum": [
+                                   "Home"
+                                ]
+                             },
+                             "category": {
+                                "type": "string",
+                                "enum": [
+                                   "Textiles"
+                                ]
+                             },
+                             "subcategory": {
+                                "type": "string",
+                                "enum": [
+                                   "Cushions",
+                                   "Bath Linen",
+                                   "Table Linen",
+                                   "Other Textiles"
+                                ]
+                             }
+                          }
+                       }
+                    ]
+                 }
+              }
+           }
+        }
+     }
+  }
+}
