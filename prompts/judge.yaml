@@ -1,0 +1,18 @@
+name: pipeline/judge
+label: production
+type: text
+prompt: |
+  Tu es un juge impartial chargé d'évaluer la qualité de l'extraction de données.
+  
+  Publicité d'origine :
+  {{ad_text}}
+  
+  Produits extraits par le pipeline :
+  {{extracted_products}}
+  
+  Évalue si l'extraction est complète et correcte.
+  Donne un score entre 0 et 1 pour la précision (pas d'hallucination) et pour le rappel (pas d'oubli majeur).
+config:
+  model: gemini-2.5-flash
+  temperature: 0.0
+  max_tokens: 1024

@@ -540,16 +540,35 @@ Script d'init `scripts/seed_prompts.py` pour push les YAML vers Langfuse au prem
 
 ### Phase 4 — Observability (Langfuse wiring)
 
-**Objectif** : infra de tracing prête AVANT l'implémentation des étapes.
+**Objectif** : infra de tracing prête AVANT l'implémentation des étapes. Le pipeline phase 5 ne doit plus toucher Langfuse directement.
 
-- `observability/client.py` : singleton `get_langfuse()`.
-- `observability/prompts.py` : `PromptRegistry.get()` avec cache et fallback YAML.
-- `observability/tracing.py` : context managers `pipeline_trace(ad)` et `step_span(trace, name)`.
-- `observability/scoring.py` : `score_taxonomy_coherence`, `score_confidence`, `score_llm_judge`.
-- Écrire les YAML initiaux dans `prompts/`.
-- `scripts/seed_prompts.py`.
+**SDK** : Langfuse Python SDK v4 (basé OpenTelemetry). API cible : `get_client()`, `start_as_current_observation()`, `create_score()`, `get_prompt()`, `create_prompt()`.
 
-**Checkpoint** : test qui ouvre trace → span → log score → on voit tout dans Langfuse.
+**Modèle de tracing figé** :
+- `session` = un batch CLI
+- `trace` = une pub (`platform_ad_id`)
+- `span` = une étape pipeline (`step1_universe`, `step2_products`, etc.)
+- `generation` = un appel LLM dans une étape
+- `score` = métrique attachée à la trace ou à la génération
+
+**Sous-étapes d'implémentation** (dans l'ordre exact) :
+
+1. **`config.py`** — `Settings(BaseSettings)` complet avec `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`, `LANGFUSE_ENABLED`, `PROMPT_CACHE_TTL_SECONDS`. `.env.example` à jour.
+2. **`observability/client.py`** — `get_langfuse_client()` singleton, basé sur `langfuse.get_client()`. Retourne `None` si désactivé ou mal configuré (graceful degradation).
+3. **`observability/tracing.py`** — context managers `pipeline_trace(ad, session_id)` et `step_span(name, input_payload)`. `NullTraceContext`/`NullSpanContext` pour fonctionner sans Langfuse. Helper `_safe_model_dump(obj)`.
+4. **`observability/prompts.py`** — `PromptRegistry.get(name, label)` avec cache TTL + fallback YAML. `ManagedPrompt(BaseModel)` interne pour découpler du SDK. Les prompts YAML locaux contiennent `name`, `label`, `prompt`, `config`.
+5. **`prompts/*.yaml`** — 7 fichiers YAML initiaux (universe, products, classification, name_extraction, fallback_enriched, taxonomy_generation, judge). Stubs réalistes avec variables `{{var}}` et config modèle.
+6. **`scripts/seed_prompts.py`** — lit `prompts/*.yaml`, pousse vers Langfuse via `create_prompt()`.
+7. **`observability/scoring.py`** — `score_taxonomy_coherence()` (déterministe), `score_confidence()` (relay), `score_llm_judge()` (stub `NotImplementedError`). Calcul découplé de la publication Langfuse.
+8. **`scripts/smoke.py`** — checkpoint final : trace → span → prompt → génération mock → score → visualisation UI.
+
+**Principes** :
+- Aucun import `langfuse` hors de `observability/`.
+- Le pipeline fonctionne sans Langfuse actif (null objects partout).
+- Les prompts locaux YAML sont la source de fallback dès le jour 1.
+- Le calcul de score est pur ; la publication Langfuse est un effet de bord encapsulé.
+
+**Checkpoint** : `uv run python scripts/smoke.py` passe. Dans l'UI Langfuse : trace visible, span enfant visible, prompt lié, score attaché.
 
 ### Phase 5 — Pipeline steps (le cœur)
 

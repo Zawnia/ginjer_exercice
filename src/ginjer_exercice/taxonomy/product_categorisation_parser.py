@@ -3,7 +3,7 @@ import json
 import logging
 from pathlib import Path
 
-from src.ginjer_exercice.schemas.taxonomy import BrandTaxonomy, NO_SUBCATEGORY_SENTINEL
+from ..schemas.taxonomy import BrandTaxonomy, NO_SUBCATEGORY_SENTINEL
 
 logger = logging.getLogger(__name__)
 

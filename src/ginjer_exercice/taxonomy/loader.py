@@ -2,14 +2,14 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from src.ginjer_exercice.exceptions import TaxonomyNotFoundError
-from src.ginjer_exercice.schemas.ad import Brand
-from src.ginjer_exercice.schemas.taxonomy import BrandTaxonomy
-from src.ginjer_exercice.taxonomy.product_categorisation_parser import (
+from ..exceptions import TaxonomyNotFoundError
+from ..schemas.ad import Brand
+from ..schemas.taxonomy import BrandTaxonomy
+from .product_categorisation_parser import (
     parse_canonical_taxonomy,
     _DEFAULT_CANONICAL_SOURCE,
 )
-from src.ginjer_exercice.taxonomy.store import TaxonomyStore
+from .store import TaxonomyStore
 
 logger = logging.getLogger(__name__)
 
