@@ -37,7 +37,7 @@ def score_taxonomy_coherence(
     langfuse = get_langfuse_client()
     if langfuse is not None and trace_id is not None:
         try:
-            langfuse.score(
+            langfuse.create_score(
                 trace_id=trace_id,
                 observation_id=observation_id,
                 name="taxonomy_coherence",
@@ -62,7 +62,7 @@ def score_confidence(
     langfuse = get_langfuse_client()
     if langfuse is not None and trace_id is not None:
         try:
-            langfuse.score(
+            langfuse.create_score(
                 trace_id=trace_id,
                 observation_id=observation_id,
                 name=f"confidence_{step_name}",

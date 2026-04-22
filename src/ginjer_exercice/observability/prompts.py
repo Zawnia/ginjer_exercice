@@ -27,8 +27,6 @@ class ManagedPrompt(BaseModel):
 
     def compile(self, **variables: str) -> str:
         """Remplace les variables {{var}} dans le prompt."""
-        # On utilise une logique simple de remplacement, similaire à Langfuse SDK pour "text" prompt
-        # Langfuse gère les variables de la forme {{var}}
         text = self.prompt
         for key, value in variables.items():
             text = text.replace(f"{{{{{key}}}}}", str(value))
@@ -48,8 +46,6 @@ class PromptRegistry:
         self.cache_ttl = cache_ttl if cache_ttl is not None else settings.prompt_cache_ttl_seconds
         
         if prompts_dir is None:
-            # On part du principe que src/ginjer_exercice/observability/prompts.py
-            # et on veut pointer vers la racine du projet /prompts
             base_dir = Path(__file__).resolve().parent.parent.parent.parent
             self.prompts_dir = base_dir / "prompts"
         else:
@@ -85,9 +81,6 @@ class PromptRegistry:
         if langfuse is not None:
             try:
                 lf_prompt = langfuse.get_prompt(name, label=label, type="text")
-                # Attention, en v4 le prompt peut être de type TextPrompt ou ChatPrompt.
-                # Ici on force type="text" pour s'assurer que c'est un texte (défaut).
-                # lf_prompt.prompt contient le texte
                 config = lf_prompt.config if hasattr(lf_prompt, 'config') else {}
                 if config is None:
                     config = {}
@@ -110,7 +103,7 @@ class PromptRegistry:
 
     def _get_from_yaml(self, name: str, label: str) -> ManagedPrompt:
         """Charge le prompt depuis les fichiers YAML locaux."""
-        filename = name.split("/")[-1] + ".yaml"  # ex: pipeline/universe -> universe.yaml
+        filename = name.split("/")[-1] + ".yaml" 
         filepath = self.prompts_dir / filename
         
         if not filepath.exists():

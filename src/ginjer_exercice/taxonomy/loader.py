@@ -24,9 +24,7 @@ def load_taxonomy(
 
     Stratégie de résolution (dans l'ordre) :
         1. Taxonomie spécialisée par marque (``{brand.value}.json``), si elle existe.
-           Phase actuelle : ce fichier n'est jamais créé automatiquement.
-           Extension future : enrichissements marque-spécifiques persistés ici.
-        2. Taxonomie canonique commune déjà persistée (``canonical.json``).
+        2. Taxonomie canonique commune déjà persistée à partir de product_categorisation.json.
         3. Bootstrap : reparse le fichier source et persiste la canonique.
 
     Quand ``force_refresh`` est True, les étapes 1 et 2 sont ignorées.

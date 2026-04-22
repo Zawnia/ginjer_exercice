@@ -4,8 +4,8 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from src.ginjer_exercice.exceptions import TaxonomyNotFoundError
-from src.ginjer_exercice.schemas.taxonomy import BrandTaxonomy
+from ..exceptions import TaxonomyNotFoundError
+from ..schemas.taxonomy import BrandTaxonomy
 
 
 class TaxonomyStore:

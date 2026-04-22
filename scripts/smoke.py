@@ -91,7 +91,7 @@ def run_smoke_test():
             # 8. Score
             print("Enregistrement du score...")
             # On log un faux score pour valider l'API
-            langfuse.score(
+            langfuse.create_score(
                 trace_id=trace_id,
                 observation_id=generation_id,
                 name="taxonomy_coherence",

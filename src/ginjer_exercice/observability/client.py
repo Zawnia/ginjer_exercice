@@ -24,8 +24,6 @@ def get_langfuse_client() -> Langfuse | None:
         return None
 
     try:
-        # Initialiser Langfuse via le constructeur pour passer explicitement les paramètres,
-        # puis le SDK le mettra en cache pour get_client()
         langfuse = Langfuse(
             public_key=settings.langfuse_public_key,
             secret_key=settings.langfuse_secret_key,

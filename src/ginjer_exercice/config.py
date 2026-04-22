@@ -23,6 +23,18 @@ class Settings(BaseSettings):
     web_verify_threshold: float = 0.85
     prompt_cache_ttl_seconds: int = 300
 
+    # BigQuery
+    bigquery_table: str = "ginjer-440122.ia_eng_interview.ads"
+
+    # Results persistence
+    sqlite_db_path: str = "data/results/pipeline_results.db"
+
+    # Media fetcher
+    media_max_size_bytes: int = 50 * 1024 * 1024  # 50 MB
+    media_image_timeout: float = 30.0
+    media_video_timeout: float = 120.0
+    media_max_retries: int = 3
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

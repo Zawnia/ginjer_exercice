@@ -64,7 +64,7 @@ def pipeline_trace(ad: Ad, session_id: str | None = None) -> Generator[Any, None
             "text_count": len(ad.texts),
         }
         
-        root_span.update_trace(
+        root_span.update(
             session_id=session_id,
             user_id=ad.brand.value,
             tags=tags,

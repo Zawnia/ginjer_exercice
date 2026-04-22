@@ -7,7 +7,6 @@ from ..schemas.taxonomy import BrandTaxonomy, NO_SUBCATEGORY_SENTINEL
 
 logger = logging.getLogger(__name__)
 
-# Chemin résolu depuis la racine du projet (parents[3] depuis src/ginjer_exercice/taxonomy/)
 _PROJECT_ROOT = Path(__file__).resolve().parents[4]
 _DEFAULT_CANONICAL_SOURCE = _PROJECT_ROOT / "data" / "raw" / "product_categorisation.json"
 
