@@ -7,8 +7,8 @@ from ..schemas.taxonomy import BrandTaxonomy, NO_SUBCATEGORY_SENTINEL
 
 logger = logging.getLogger(__name__)
 
-_PROJECT_ROOT = Path(__file__).resolve().parents[4]
-_DEFAULT_CANONICAL_SOURCE = _PROJECT_ROOT / "data" / "raw" / "product_categorisation.json"
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_DEFAULT_CANONICAL_SOURCE = _PROJECT_ROOT / "product_categorisation.json"
 
 
 def _extract_anyof_branches(data: dict) -> list[dict]:

@@ -182,6 +182,7 @@ pyrightconfig.json
 
 #secrets 
 .secrets/
+.secret/
 
 #skills
 .ai_skills/

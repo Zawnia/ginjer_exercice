@@ -1,0 +1,469 @@
+{
+  "name": "canonical",
+  "source": "C:\\Users\\JUGE\\Documents\\Projets\\ginjer_exercice\\product_categorisation.json",
+  "generated_at": "2026-04-23T09:30:21.074190+00:00",
+  "is_canonical": true,
+  "taxonomy": {
+    "tree": {
+      "Women": {
+        "Accessories": [
+          "Belts",
+          "Cufflinks",
+          "Gloves",
+          "Hair Accessories",
+          "Hats",
+          "Key Rings & Bag Charms",
+          "Other Accessories",
+          "Pocket Squares",
+          "Scarves",
+          "Ties"
+        ],
+        "Eyewear": [
+          "Limited Editions",
+          "Optical Frames",
+          "Other Eyewear",
+          "Sunglasses"
+        ],
+        "Small Leather Goods": [
+          "Card Holders",
+          "Key Cases",
+          "Other Small Leather Goods",
+          "Passport Holders",
+          "Phone Pouches",
+          "Pouches",
+          "Wallets"
+        ],
+        "Beachwear": [
+          "Bikinis",
+          "Cover-ups",
+          "Flip-flops",
+          "One-piece",
+          "Other Beachwear",
+          "Swim Shorts"
+        ],
+        "Beach Accessories": [
+          "Other Beach Accessories",
+          "Towels"
+        ],
+        "Bags": [
+          "Backpacks",
+          "Clutches",
+          "Crossbody/Shoulder Bag",
+          "Handbags",
+          "Mini Bags",
+          "Other Bags",
+          "Straps",
+          "Totes"
+        ],
+        "Shoes": [
+          "Ballerinas",
+          "Boots",
+          "Flats",
+          "Heels",
+          "Loafers",
+          "Other Shoes",
+          "Oxfords",
+          "Sandals",
+          "Sneakers"
+        ],
+        "Ready-to-Wear": [
+          "Coats & Jackets",
+          "Denim",
+          "Dresses",
+          "Homewear",
+          "Other Ready-to-Wear",
+          "Other bottoms",
+          "Other tops",
+          "Pants",
+          "Shirts",
+          "Shorts",
+          "Skirts",
+          "Sweaters & Cardigans",
+          "T-shirts & Polos",
+          "Underwear & Socks"
+        ]
+      },
+      "Men": {
+        "Accessories": [
+          "Belts",
+          "Cufflinks",
+          "Gloves",
+          "Hair Accessories",
+          "Hats",
+          "Key Rings & Bag Charms",
+          "Other Accessories",
+          "Pocket Squares",
+          "Scarves",
+          "Ties"
+        ],
+        "Eyewear": [
+          "Limited Editions",
+          "Optical Frames",
+          "Other Eyewear",
+          "Sunglasses"
+        ],
+        "Small Leather Goods": [
+          "Card Holders",
+          "Key Cases",
+          "Other Small Leather Goods",
+          "Passport Holders",
+          "Phone Pouches",
+          "Pouches",
+          "Wallets"
+        ],
+        "Beachwear": [
+          "Bikinis",
+          "Cover-ups",
+          "Flip-flops",
+          "One-piece",
+          "Other Beachwear",
+          "Swim Shorts"
+        ],
+        "Beach Accessories": [
+          "Other Beach Accessories",
+          "Towels"
+        ],
+        "Bags": [
+          "Backpacks",
+          "Clutches",
+          "Crossbody/Shoulder Bag",
+          "Handbags",
+          "Mini Bags",
+          "Other Bags",
+          "Straps",
+          "Totes"
+        ],
+        "Shoes": [
+          "Ballerinas",
+          "Boots",
+          "Flats",
+          "Heels",
+          "Loafers",
+          "Other Shoes",
+          "Oxfords",
+          "Sandals",
+          "Sneakers"
+        ],
+        "Ready-to-Wear": [
+          "Coats & Jackets",
+          "Denim",
+          "Dresses",
+          "Homewear",
+          "Other Ready-to-Wear",
+          "Other bottoms",
+          "Other tops",
+          "Pants",
+          "Shirts",
+          "Shorts",
+          "Skirts",
+          "Sweaters & Cardigans",
+          "T-shirts & Polos",
+          "Underwear & Socks"
+        ]
+      },
+      "Unisex": {
+        "Accessories": [
+          "Belts",
+          "Cufflinks",
+          "Gloves",
+          "Hair Accessories",
+          "Hats",
+          "Key Rings & Bag Charms",
+          "Other Accessories",
+          "Pocket Squares",
+          "Scarves",
+          "Ties"
+        ],
+        "Eyewear": [
+          "Limited Editions",
+          "Optical Frames",
+          "Other Eyewear",
+          "Sunglasses"
+        ],
+        "Small Leather Goods": [
+          "Card Holders",
+          "Key Cases",
+          "Other Small Leather Goods",
+          "Passport Holders",
+          "Phone Pouches",
+          "Pouches",
+          "Wallets"
+        ],
+        "Beach Accessories": [
+          "Other Beach Accessories",
+          "Towels"
+        ],
+        "Travel Bags & Trunks": [
+          "Other Travel Bags & Trunks",
+          "Rolling Luggage",
+          "Travel Bags",
+          "Trunks & Boxes"
+        ]
+      },
+      "Beauty": {
+        "Makeup": [
+          "Brushes & Tools",
+          "Eyes",
+          "Face",
+          "Lips",
+          "Nails",
+          "Other Makeup"
+        ],
+        "Skincare": [
+          "Cleansers",
+          "Creams",
+          "Eye Care",
+          "Lotions",
+          "Masks",
+          "Men's Care",
+          "Moisturizers",
+          "Other Skincare",
+          "Serums",
+          "Sun Care"
+        ],
+        "Perfume": [
+          "Bath & Body",
+          "Cologne",
+          "Kids' Perfume",
+          "Men's Perfume",
+          "Travel Perfume Kit",
+          "Women's Perfume"
+        ]
+      },
+      "Watches & Jewelry": {
+        "Watches": [
+          "Luxury Watches",
+          "Objects of Time",
+          "Other Watches",
+          "Smart Watches",
+          "Sport Watches"
+        ],
+        "Jewelry": [
+          "Bracelets",
+          "Brooches",
+          "Customized Pieces",
+          "Earrings",
+          "Necklaces",
+          "Other Jewelry",
+          "Rings"
+        ]
+      },
+      "Technology": {
+        "Audio": [
+          "Camera Bags",
+          "Cameras",
+          "E-readers",
+          "Earbuds",
+          "Fitness Trackers",
+          "Headphones",
+          "Lenses",
+          "Mobile Accessories",
+          "Other Audio",
+          "Other Mobile Devices",
+          "Other Photography",
+          "Other Wearables",
+          "Photo Accessories",
+          "Smartphones",
+          "Smartwatches",
+          "Sound Systems",
+          "Speakers",
+          "Tablets",
+          "Turntables"
+        ],
+        "Mobile Devices": [
+          "Camera Bags",
+          "Cameras",
+          "E-readers",
+          "Earbuds",
+          "Fitness Trackers",
+          "Headphones",
+          "Lenses",
+          "Mobile Accessories",
+          "Other Audio",
+          "Other Mobile Devices",
+          "Other Photography",
+          "Other Wearables",
+          "Photo Accessories",
+          "Smartphones",
+          "Smartwatches",
+          "Sound Systems",
+          "Speakers",
+          "Tablets",
+          "Turntables"
+        ],
+        "Photography": [
+          "Camera Bags",
+          "Cameras",
+          "E-readers",
+          "Earbuds",
+          "Fitness Trackers",
+          "Headphones",
+          "Lenses",
+          "Mobile Accessories",
+          "Other Audio",
+          "Other Mobile Devices",
+          "Other Photography",
+          "Other Wearables",
+          "Photo Accessories",
+          "Smartphones",
+          "Smartwatches",
+          "Sound Systems",
+          "Speakers",
+          "Tablets",
+          "Turntables"
+        ],
+        "Wearables": [
+          "Camera Bags",
+          "Cameras",
+          "E-readers",
+          "Earbuds",
+          "Fitness Trackers",
+          "Headphones",
+          "Lenses",
+          "Mobile Accessories",
+          "Other Audio",
+          "Other Mobile Devices",
+          "Other Photography",
+          "Other Wearables",
+          "Photo Accessories",
+          "Smartphones",
+          "Smartwatches",
+          "Sound Systems",
+          "Speakers",
+          "Tablets",
+          "Turntables"
+        ],
+        "Other Technology": [
+          "Camera Bags",
+          "Cameras",
+          "E-readers",
+          "Earbuds",
+          "Fitness Trackers",
+          "Headphones",
+          "Lenses",
+          "Mobile Accessories",
+          "Other Audio",
+          "Other Mobile Devices",
+          "Other Photography",
+          "Other Wearables",
+          "Photo Accessories",
+          "Smartphones",
+          "Smartwatches",
+          "Sound Systems",
+          "Speakers",
+          "Tablets",
+          "Turntables"
+        ]
+      },
+      "Kids & Baby": {
+        "Baby Girls": [
+          "Accessories",
+          "Clothing",
+          "Other Kids & Baby",
+          "Shoes",
+          "Swimwear"
+        ],
+        "Baby Boys": [
+          "Accessories",
+          "Clothing",
+          "Other Kids & Baby",
+          "Shoes",
+          "Swimwear"
+        ],
+        "Girls": [
+          "Accessories",
+          "Clothing",
+          "Other Kids & Baby",
+          "Shoes",
+          "Swimwear"
+        ],
+        "Boys": [
+          "Accessories",
+          "Clothing",
+          "Other Kids & Baby",
+          "Shoes",
+          "Swimwear"
+        ],
+        "Newborn": [
+          "Accessories",
+          "Clothing",
+          "Other Newborn",
+          "Shoes",
+          "Toys"
+        ]
+      },
+      "Art & Culture": {
+        "Art Objects": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Books": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Stationery": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Other Art & Culture": [
+          "__NO_SUBCATEGORY__"
+        ]
+      },
+      "Pets": {
+        "Accessories": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Clothing": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Pet Home & Living": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Other Pets": [
+          "__NO_SUBCATEGORY__"
+        ]
+      },
+      "Lifestyle": {
+        "Sports Equipment": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Writing Instruments": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Desk Accessories": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Games": [
+          "__NO_SUBCATEGORY__"
+        ]
+      },
+      "Home": {
+        "Tableware": [
+          "Carafes",
+          "Cutlery",
+          "Glasses",
+          "Other Tableware",
+          "Plates & Bowls",
+          "Tea & Coffee"
+        ],
+        "Objects": [
+          "Candle & Candleholders",
+          "Other Objects",
+          "Trays"
+        ],
+        "Decor": [
+          "Baskets",
+          "Other Decor",
+          "Vases",
+          "Wallpapers"
+        ],
+        "Furniture": [
+          "__NO_SUBCATEGORY__"
+        ],
+        "Textiles": [
+          "Bath Linen",
+          "Cushions",
+          "Other Textiles",
+          "Table Linen"
+        ]
+      }
+    }
+  }
+}

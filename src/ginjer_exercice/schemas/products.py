@@ -33,7 +33,7 @@ class ProductClassification(BaseModel):
     universe: str
     category: str
     subcategory: str
-    product_type: str
+    product_type: str | None = None
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confiance de l'IA entre 0 et 1.")
 
 class ProductName(BaseModel):

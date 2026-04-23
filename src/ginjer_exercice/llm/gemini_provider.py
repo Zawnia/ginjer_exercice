@@ -51,7 +51,7 @@ class GeminiProvider(LLMProvider):
         for msg in messages:
             parts = []
             if msg.text:
-                parts.append(msg.text)
+                parts.append(types.Part.from_text(text=msg.text))
             
             for media in msg.media:
                 if isinstance(media, bytes):
