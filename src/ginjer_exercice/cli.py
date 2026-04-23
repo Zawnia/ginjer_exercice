@@ -2,6 +2,7 @@ from pathlib import Path
 import logging
 import os
 import sqlite3
+import sys
 
 import typer
 from google.cloud import bigquery
@@ -32,8 +33,21 @@ def _resolve_log_level(*, verbose: bool, debug: bool) -> int:
     return logging.WARNING
 
 
+def _configure_console_encoding() -> None:
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream is None or not hasattr(stream, "reconfigure"):
+            continue
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+
+
 def _configure_logging(*, verbose: bool, debug: bool) -> None:
+    _configure_console_encoding()
     level = _resolve_log_level(verbose=verbose, debug=debug)
+    os.environ.setdefault("PYTHONIOENCODING", "utf-8")
     logging.basicConfig(
         level=level,
         format=_LOG_FORMAT,
