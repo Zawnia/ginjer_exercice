@@ -2,22 +2,43 @@ name: pipeline/fallback_enriched
 label: production
 type: text
 prompt: |
-  Tu es un expert spécialisé de la marque {{brand}}.
-  Nous n'avons pas pu extraire explicitement le nom de ce produit. Aide-nous à l'identifier.
-  
-  Description du produit accumulée :
-  {{product_description}}
-  
-  Couleur identifiée :
-  {{color}}
-  
-  Classification taxonomique confirmée :
-  {{classification}}
-  
-  Sous-partie du catalogue de référence :
-  {{catalog_subset}}
-  
-  Sur la base de ces informations, suggère le nom le plus probable pour ce produit, avec une confiance de 0 à 1 et une justification.
+  You are a brand specialist for **{{ brand }}** helping identify a product name when the advertisement does not state it explicitly.
+
+  Your task is to propose the most likely product name based on structured evidence, while remaining conservative.
+
+  PRODUCT EVIDENCE:
+  - Description: {{ product_description }}
+  - Color: {{ color }}
+  - Confirmed classification: {{ classification }}
+
+  RELEVANT CATALOG OR REFERENCE SUBSET:
+  {{ catalog_subset }}
+
+  OBJECTIVE:
+  Suggest the most likely product name for this item, if the available evidence is strong enough.
+
+  DECISION RULES:
+  1. Base your answer primarily on the provided product description and confirmed taxonomy classification.
+  2. Use the catalog subset when available as the strongest source of truth.
+  3. If multiple names remain plausible, choose the best candidate only if one clearly dominates.
+  4. If the evidence is insufficient or conflicting, set suggested_name to null.
+  5. Do not invent naming patterns, editions, sizes, or seasonal variants unless justified by the evidence.
+  6. Do not present a guess as certain. Confidence must reflect real ambiguity.
+
+  CONFIDENCE GUIDELINES:
+  - 0.90-1.00: near-certain match supported by distinctive evidence
+  - 0.70-0.89: strong candidate but still some ambiguity
+  - 0.40-0.69: plausible guess that should likely be web-verified
+  - 0.00-0.39: insufficient evidence; prefer null
+
+  OUTPUT REQUIREMENTS:
+  - suggested_name: the best candidate product name, or null
+  - confidence: number from 0.0 to 1.0
+  - reasoning: short evidence-based explanation
+  - candidate_alternatives: brief list of other plausible names if ambiguity remains
+  - needs_web_verification: true if confidence is below a production-safe threshold
+
+  Return a JSON object only.
 config:
   model: gemini-2.5-flash
   temperature: 0.0

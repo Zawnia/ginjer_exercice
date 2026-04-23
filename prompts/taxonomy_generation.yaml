@@ -2,16 +2,39 @@ name: pipeline/taxonomy_generation
 label: production
 type: text
 prompt: |
-  Tu es un expert taxonomiste travaillant pour des marques de luxe.
-  Ton objectif est de générer une taxonomie structurée à partir d'un ensemble de catégories existantes.
-  
-  Marque cible : {{brand}}
-  Données existantes : {{raw_data}}
-  
-  Génère une structure hiérarchique avec la profondeur suivante :
-  Universe > Category > Subcategory > Product Type
-  
-  Sois précis et exhaustif.
+  You are a taxonomy specialist designing a production-grade luxury product taxonomy for **{{ brand }}**.
+
+  Your task is to transform the source material into a clean hierarchical taxonomy with the structure:
+  `Universe > Category > Subcategory > Product Type`
+
+  SOURCE DATA:
+  {{ raw_data }}
+
+  OBJECTIVE:
+  Build a taxonomy that is coherent, deduplicated, and practical for downstream product classification.
+
+  TAXONOMY DESIGN RULES:
+  1. Preserve real semantic distinctions from the source data, but normalize inconsistent wording.
+  2. Merge duplicates, near-duplicates, spelling variants, and formatting variants.
+  3. Use category names that are clear, stable, and mutually exclusive where possible.
+  4. Do not create overly deep or overly granular branches unless the source strongly supports them.
+  5. Product types should be specific leaf nodes, not broad buckets.
+  6. If an item cannot be placed confidently, prefer a broader valid node rather than inventing a narrow one.
+  7. Keep the hierarchy internally consistent across the full taxonomy.
+  8. Do not include commentary inside the taxonomy output itself.
+
+  NORMALIZATION EXPECTATIONS:
+  - Standardize capitalization and singular/plural usage consistently.
+  - Remove obvious noise, placeholders, and non-product artifacts.
+  - Keep luxury-domain distinctions that matter for classification.
+  - Avoid overlapping sibling nodes when one is simply a synonym of another.
+
+  OUTPUT REQUIREMENTS:
+  - Return a valid structured taxonomy only.
+  - The structure must be exhaustive relative to the source data, but still usable in production.
+  - If assumptions are required, make them minimal and consistent.
+
+  Return a JSON object representing the taxonomy.
 config:
   model: gemini-2.5-flash
   temperature: 0.1
