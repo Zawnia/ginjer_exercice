@@ -78,7 +78,7 @@ def execute(
             "brand": ad.brand.value,
             "universes": universe_result.universe_names,
         },
-    ):
+    ) as span:
         # 1. Récupérer le prompt
         prompt = prompt_registry.get(_PROMPT_NAME)
 
@@ -113,7 +113,7 @@ def execute(
             messages=messages,
             response_model=DetectedProductList,
             config=llm_config,
-            trace_context=None,
+            trace_context=trace,
         )
         llm_output: DetectedProductList = response.parsed  # type: ignore[assignment]
 
@@ -121,7 +121,7 @@ def execute(
         products = _convert_and_filter(llm_output, ad.platform_ad_id)
 
         logger.info(
-            "Step2 — ad_id=%s → %d produits détectés (avant filtre: %d), "
+            "Step2 — ad_id=%s → %d produits detectes (avant filtre: %d), "
             "overall_confidence=%.2f",
             ad.platform_ad_id,
             len(products),
@@ -129,6 +129,7 @@ def execute(
             llm_output.overall_confidence,
         )
 
+        span.update_output([p.model_dump() for p in products])
         return products
 
 

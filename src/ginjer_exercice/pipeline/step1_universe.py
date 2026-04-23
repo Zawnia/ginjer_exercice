@@ -67,7 +67,7 @@ def execute(
         FileNotFoundError: Si le prompt ``pipeline/universe`` est absent de Langfuse
             et du fallback YAML local.
     """
-    with step_span(name="step_1_universe", input_payload=ad.model_dump()):
+    with step_span(name="step_1_universe", input_payload=ad.model_dump()) as span:
         # 1. Récupérer le prompt versionné
         prompt = prompt_registry.get(_PROMPT_NAME)
 
@@ -100,7 +100,7 @@ def execute(
             messages=messages,
             response_model=UniverseResult,
             config=llm_config,
-            trace_context=None,  # Le span courant est géré par Langfuse via OTEL
+            trace_context=trace,
         )
 
         result: UniverseResult = response.parsed  # type: ignore[assignment]
@@ -115,10 +115,11 @@ def execute(
         )
 
         logger.info(
-            "Step1 — ad_id=%s → %d univers détectés : %s",
+            "Step1 — ad_id=%s → %d univers detectes : %s",
             ad.platform_ad_id,
             len(result.detected_universes),
             [u.universe for u in result.detected_universes],
         )
 
+        span.update_output(result.model_dump())
         return result

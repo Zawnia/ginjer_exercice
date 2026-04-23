@@ -108,8 +108,24 @@ class GeminiProvider(LLMProvider):
                 usage = (0, 0)
                 if hasattr(response, 'usage_metadata') and response.usage_metadata:
                     usage = (
-                        response.usage_metadata.prompt_token_count or 0, 
+                        response.usage_metadata.prompt_token_count or 0,
                         response.usage_metadata.candidates_token_count or 0
+                    )
+
+                if trace_context is not None:
+                    trace_context.log_generation(
+                        name=f"llm_{config.model_name}",
+                        model=config.model_name,
+                        input=[m.model_dump() for m in messages],
+                        output=parsed_obj.model_dump(),
+                        usage_details={
+                            "input_tokens": usage[0],
+                            "output_tokens": usage[1],
+                        },
+                        model_parameters={
+                            "temperature": config.temperature,
+                            "max_tokens": config.max_tokens,
+                        },
                     )
 
                 return LLMResponse(

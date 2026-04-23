@@ -24,6 +24,37 @@ class TraceContext:
     def __init__(self, span: Any = None):
         self.span = span
 
+    def log_generation(
+        self,
+        name: str,
+        model: str,
+        input: Any,
+        output: Any,
+        usage_details: dict[str, int],
+        model_parameters: dict[str, Any] | None = None,
+        cost_details: dict[str, float] | None = None,
+    ) -> None:
+        """Crée une generation Langfuse enfant du span actif avec les données LLM.
+
+        Appelée après un appel LLM réussi. Crée une generation "flat" (atomic,
+        sans context manager) avec toutes les données disponibles d'un coup.
+
+        Si ``self.span`` est None (pas de trace active), skip silencieusement.
+        """
+        if self.span is None:
+            return
+        gen = self.span.start_observation(
+            name=name,
+            as_type="generation",
+            input=input,
+            output=output,
+            model=model,
+            model_parameters=model_parameters,
+            usage_details=usage_details,
+            cost_details=cost_details,
+        )
+        gen.end()
+
 class LLMProvider(ABC):
     """Interface abstraite pour tous les fournisseurs d'IA."""
     

@@ -86,7 +86,7 @@ def execute(
             "ad_id": ad.platform_ad_id,
             "brand": ad.brand.value,
         },
-    ):
+    ) as span:
         # 1. Récupérer le prompt
         prompt = prompt_registry.get(_PROMPT_NAME)
 
@@ -122,7 +122,7 @@ def execute(
             messages=messages,
             response_model=ExtractedName,
             config=llm_config,
-            trace_context=None,
+            trace_context=trace,
         )
         extracted: ExtractedName = response.parsed  # type: ignore[assignment]
 
@@ -143,6 +143,7 @@ def execute(
                 extracted.confidence,
             )
 
+        span.update_output(result.model_dump() if result else None)
         return result
 
 

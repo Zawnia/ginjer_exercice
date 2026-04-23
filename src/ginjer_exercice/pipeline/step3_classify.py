@@ -82,7 +82,7 @@ def execute(
             "ad_id": ad.platform_ad_id,
             "brand": ad.brand.value,
         },
-    ):
+    ) as span:
         # 1. Récupérer le prompt
         prompt = prompt_registry.get(_PROMPT_NAME)
 
@@ -125,7 +125,7 @@ def execute(
                 messages=messages,
                 response_model=ProductClassification,
                 config=llm_config,
-                trace_context=None,
+                trace_context=trace,
             )
             parsed: ProductClassification = response.parsed  # type: ignore[assignment]
             last_parsed = parsed
@@ -138,13 +138,14 @@ def execute(
 
             if is_valid:
                 logger.info(
-                    "Step3 — Classifié en %d tentative(s) : %s > %s > %s (conf=%.2f)",
+                    "Step3 — Classifie en %d tentative(s) : %s > %s > %s (conf=%.2f)",
                     attempt + 1,
                     parsed.universe,
                     parsed.category,
                     parsed.subcategory,
                     parsed.confidence,
                 )
+                span.update_output(parsed.model_dump())
                 return parsed
 
             # Chemin invalide : construire le message correctif
