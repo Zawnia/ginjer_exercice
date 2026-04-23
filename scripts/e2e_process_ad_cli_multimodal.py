@@ -21,6 +21,7 @@ Usage :
 
 from __future__ import annotations
 
+import argparse
 import sqlite3
 import sys
 from collections import deque
@@ -48,6 +49,11 @@ from ginjer_exercice.schemas.step_outputs import (
     UniverseDetection,
     UniverseResult,
 )
+
+
+def _safe_print(text: str) -> None:
+    encoding = sys.stdout.encoding or "utf-8"
+    sys.stdout.buffer.write((text + "\n").encode(encoding, errors="replace"))
 
 
 class SequenceLLMProvider(LLMProvider):
@@ -179,6 +185,21 @@ class FakeMediaFetcher:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Smoke test E2E du flux process-ad avec multimodal image."
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Active les logs INFO de la CLI et du pipeline pendant le smoke test.",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Active les logs DEBUG détaillés de la CLI et du pipeline.",
+    )
+    args = parser.parse_args()
+
     runner = CliRunner()
 
     image_url = "https://example.com/chanel-n5.jpg"
@@ -258,11 +279,25 @@ def main() -> None:
         patch("ginjer_exercice.observability.scoring.load_taxonomy", return_value=fake_taxonomy),
         patch("ginjer_exercice.pipeline.step2_products._default_media_fetcher", return_value=fake_media_fetcher),
     ):
-        result = runner.invoke(app, ["process-ad", ad.platform_ad_id, "--db-path", str(db_path)])
+        cli_args: list[str] = []
+        if args.debug:
+            cli_args.append("--debug")
+        elif args.verbose:
+            cli_args.append("--verbose")
+        cli_args.extend(["process-ad", ad.platform_ad_id, "--db-path", str(db_path)])
+        result = runner.invoke(app, cli_args)
 
-    print("=== CLI STDOUT ===")
-    print(result.stdout.strip())
-    print()
+    _safe_print("=== CLI STDOUT ===")
+    if result.stdout.strip():
+        _safe_print(result.stdout.strip())
+    else:
+        _safe_print("(empty)")
+    stderr_output = getattr(result, "stderr", "")
+    if stderr_output and stderr_output.strip():
+        _safe_print("")
+        _safe_print("=== CLI STDERR ===")
+        _safe_print(stderr_output.strip())
+    _safe_print("")
 
     if result.exit_code != 0:
         raise SystemExit(f"Echec CLI, code={result.exit_code}")
@@ -287,16 +322,16 @@ def main() -> None:
     if persisted is None:
         raise SystemExit("Aucun résultat persisté en SQLite.")
 
-    print("=== VALIDATION ===")
-    print(f"ad_id: {persisted.ad_id}")
-    print(f"brand: {persisted.brand.value}")
-    print(f"products: {len(persisted.products)}")
-    print(f"needs_review: {persisted.needs_review}")
-    print(f"taxonomy_coherence: {persisted.scores.taxonomy_coherence}")
-    print(f"confidence: {persisted.scores.confidence}")
-    print(f"sqlite_path: {db_path}")
-    print()
-    print("Smoke test E2E OK: CLI + orchestrateur + multimodal image + SQLite.")
+    _safe_print("=== VALIDATION ===")
+    _safe_print(f"ad_id: {persisted.ad_id}")
+    _safe_print(f"brand: {persisted.brand.value}")
+    _safe_print(f"products: {len(persisted.products)}")
+    _safe_print(f"needs_review: {persisted.needs_review}")
+    _safe_print(f"taxonomy_coherence: {persisted.scores.taxonomy_coherence}")
+    _safe_print(f"confidence: {persisted.scores.confidence}")
+    _safe_print(f"sqlite_path: {db_path}")
+    _safe_print("")
+    _safe_print("Smoke test E2E OK: CLI + orchestrateur + multimodal image + SQLite.")
 
 
 if __name__ == "__main__":

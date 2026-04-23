@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from ..data_access.results_repository import ResultsRepository
 from ..llm.base import LLMProvider
 from ..observability.prompts import PromptRegistry
@@ -14,6 +16,8 @@ from ..schemas.scores import ScoreReport
 from ..taxonomy.loader import load_taxonomy
 from . import step1_universe, step2_products, step3_classify, step4_name
 
+logger = logging.getLogger(__name__)
+
 
 def run_ad(
     ad: Ad,
@@ -23,6 +27,7 @@ def run_ad(
     results_repository: ResultsRepository,
 ) -> PipelineOutput:
     """Exécute les steps 1 à 4 pour une pub, puis persiste le résultat."""
+    logger.info("orchestrator.run_ad started for ad_id=%s brand=%s", ad.platform_ad_id, ad.brand.value)
     taxonomy = load_taxonomy(ad.brand)
 
     with pipeline_trace(ad, session_id="process-ad") as trace:
@@ -42,6 +47,12 @@ def run_ad(
 
         final_products: list[FinalProductLabel] = []
         for product in products:
+            logger.debug(
+                "Processing detected product for ad_id=%s description=%s importance=%d",
+                ad.platform_ad_id,
+                product.raw_description[:80],
+                product.importance,
+            )
             classification = step3_classify.execute(
                 product,
                 ad,
@@ -81,4 +92,12 @@ def run_ad(
         )
         trace.update_output(output.model_dump())
         results_repository.save(output)
+        logger.info(
+            "orchestrator.run_ad completed for ad_id=%s products=%d needs_review=%s taxonomy_coherence=%.3f confidence=%.3f",
+            output.ad_id,
+            len(output.products),
+            output.needs_review,
+            output.scores.taxonomy_coherence or 0.0,
+            output.scores.confidence or 0.0,
+        )
         return output
