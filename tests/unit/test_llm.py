@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from ginjer_exercice.llm.base import LLMCallConfig, LLMMessage, LLMProvider
+from ginjer_exercice.llm.base import LLMCallConfig, LLMMessage, MediaPart, TextPart, LLMProvider
 from ginjer_exercice.llm.factory import get_provider
 from ginjer_exercice.llm.gemini_provider import GeminiProvider
 from ginjer_exercice.llm.openai_provider import OpenAIProvider
@@ -46,7 +46,11 @@ def test_get_provider_unsupported():
         get_provider("unknown")
 
 def test_llm_message_creation():
-    msg = LLMMessage(text="hello", media=[b"dummy_bytes", "http://example.com/img.png"])
+    msg = LLMMessage(parts=[
+        TextPart(text="hello"),
+        MediaPart(media=b"dummy_bytes", mime_type="image/jpeg"),
+        MediaPart(media="http://example.com/img.png"),
+    ])
     assert msg.text == "hello"
     assert len(msg.media) == 2
 

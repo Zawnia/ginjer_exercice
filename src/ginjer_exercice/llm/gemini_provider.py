@@ -1,13 +1,10 @@
-import os
 import time
-from typing import Any
-import json
 from pydantic import BaseModel, ValidationError
 
 from google import genai
 from google.genai import types
 
-from .base import LLMCallConfig, LLMMessage, LLMProvider, LLMResponse, TraceContext
+from .base import LLMCallConfig, LLMMessage, LLMProvider, LLMResponse, MediaPart, TextPart, TraceContext
 
 
 class GeminiProvider(LLMProvider):
@@ -50,20 +47,26 @@ class GeminiProvider(LLMProvider):
         contents = []
         for msg in messages:
             parts = []
-            if msg.text:
-                parts.append(types.Part.from_text(text=msg.text))
-            
-            for media in msg.media:
-                if isinstance(media, bytes):
-                    parts.append(types.Part.from_bytes(data=media, mime_type="image/jpeg"))
-                elif isinstance(media, str):
-                    gs_uri = media if media.startswith("gs://") else self._convert_http_to_gs_uri(media)
-                    
-                    if gs_uri.startswith("gs://"):
-                        mime_type = "video/mp4" if media.endswith((".mp4", ".mov")) else "image/jpeg"
-                        parts.append(types.Part.from_uri(file_uri=gs_uri, mime_type=mime_type))
-                    else:
-                        raise ValueError(f"URL de média non supportée directement par Gemini (doit être gs:// ou téléchargeable) : {media}")
+            for part in msg.parts:
+                if isinstance(part, TextPart):
+                    if part.text:
+                        parts.append(types.Part.from_text(text=part.text))
+                    continue
+
+                if isinstance(part, MediaPart):
+                    media = part.media
+                    mime_type = part.mime_type
+                    if isinstance(media, bytes):
+                        parts.append(types.Part.from_bytes(data=media, mime_type=mime_type or "image/jpeg"))
+                    elif isinstance(media, str):
+                        gs_uri = media if media.startswith("gs://") else self._convert_http_to_gs_uri(media)
+                        if gs_uri.startswith("gs://"):
+                            resolved_mime = mime_type or ("video/mp4" if media.endswith((".mp4", ".mov")) else "image/jpeg")
+                            parts.append(types.Part.from_uri(file_uri=gs_uri, mime_type=resolved_mime))
+                        else:
+                            raise ValueError(
+                                f"URL de média non supportée directement par Gemini (doit être gs:// ou téléchargeable) : {media}"
+                            )
             
             contents.append(types.Content(role="user", parts=parts))
         return contents

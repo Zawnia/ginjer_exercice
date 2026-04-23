@@ -1,10 +1,37 @@
-from pydantic import BaseModel, Field
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Literal
+
+from pydantic import BaseModel, Field
+
+
+class TextPart(BaseModel):
+    type: Literal["text"] = "text"
+    text: str
+
+
+class MediaPart(BaseModel):
+    type: Literal["media"] = "media"
+    media: str | bytes
+    mime_type: str | None = None
+
+
+LLMContentPart = TextPart | MediaPart
+
 
 class LLMMessage(BaseModel):
-    text: str
-    media: list[str | bytes] = Field(default_factory=list)
+    parts: list[LLMContentPart] = Field(default_factory=list)
+
+    @classmethod
+    def from_text(cls, text: str) -> "LLMMessage":
+        return cls(parts=[TextPart(text=text)])
+
+    @property
+    def text(self) -> str:
+        return "".join(part.text for part in self.parts if isinstance(part, TextPart))
+
+    @property
+    def media(self) -> list[str | bytes]:
+        return [part.media for part in self.parts if isinstance(part, MediaPart)]
 
 class LLMCallConfig(BaseModel):
     model_name: str

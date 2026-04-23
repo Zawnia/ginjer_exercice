@@ -26,6 +26,7 @@ from ginjer_exercice.llm.base import (
     TraceContext,
 )
 from ginjer_exercice.observability.prompts import ManagedPrompt, PromptRegistry
+from ginjer_exercice.schemas.media import MediaContent, MediaKind
 
 
 class FakeLLMProvider(LLMProvider):
@@ -142,7 +143,7 @@ class FakePromptRegistry:
             config={
                 "model": "fake-model",
                 "temperature": 0.0,
-                "max_tokens": 100,
+                "max_tokens": 4000,
             },
             source="yaml_fallback",
         )
@@ -163,3 +164,41 @@ class FakeTraceSpan:
 
     def __exit__(self, *args: Any) -> None:
         pass
+
+
+class FakeMediaFetcher:
+    """Fake MediaFetcher qui retourne des médias prédéfinis par URL."""
+
+    def __init__(self, media_by_url: dict[str, MediaContent] | None = None, errors: dict[str, Exception] | None = None):
+        self.media_by_url = media_by_url or {}
+        self.errors = errors or {}
+        self.downloaded_urls: list[str] = []
+
+    def download(self, url: str) -> MediaContent:
+        self.downloaded_urls.append(url)
+        if url in self.errors:
+            raise self.errors[url]
+        return self.media_by_url[url]
+
+    def download_all(self, urls: list[str]) -> list[MediaContent]:
+        return [self.download(url) for url in urls]
+
+
+def fake_image_content(url: str, mime_type: str = "image/jpeg", content: bytes = b"img") -> MediaContent:
+    return MediaContent(
+        url=url,
+        kind=MediaKind.IMAGE,
+        mime_type=mime_type,
+        content=content,
+        size_bytes=len(content),
+    )
+
+
+def fake_video_content(url: str, mime_type: str = "video/mp4", content: bytes = b"vid") -> MediaContent:
+    return MediaContent(
+        url=url,
+        kind=MediaKind.VIDEO,
+        mime_type=mime_type,
+        content=content,
+        size_bytes=len(content),
+    )

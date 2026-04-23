@@ -10,8 +10,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from ..llm.base import LLMMessage
+from ..llm.base import LLMMessage, MediaPart, TextPart
 from ..schemas.ad import AdText
+from ..schemas.media import MediaContent, MediaKind
 
 if TYPE_CHECKING:
     pass
@@ -57,36 +58,14 @@ def build_texts_block(texts: list[AdText]) -> str:
     return "\n".join(lines)
 
 
-def build_media_messages(media_urls: list[str]) -> list[LLMMessage]:
-    """Construit les messages LLM multimodaux à partir des URLs de médias.
-
-    Stratégie de gestion des limites :
-        - Images : max ``MAX_IMAGES`` fichiers. Au-delà, on prend les N premiers
-          (pas d'échantillonnage aléatoire pour la reproductibilité).
-        - Vidéos : max ``MAX_VIDEOS`` fichiers pour les mêmes raisons de coût token.
-        - Mix images/vidéos : la limite globale est ``MAX_MEDIA_FILES``.
-        - Si aucun média : retourne une liste vide (la step continue avec le texte seul).
-
-    L'URL est passée directement dans ``LLMMessage.media`` — le provider
-    (GeminiProvider) est responsable de la conversion gs:// si nécessaire.
-
-    Args:
-        media_urls: Liste d'URLs de médias (images ou vidéos).
-
-    Returns:
-        Liste de ``LLMMessage`` avec les médias chargés.
-        Peut être une liste vide si ``media_urls`` est vide.
-
-    Raises:
-        ValueError: Si une URL est vide ou None (corruption de données).
-    """
+def select_media_urls(media_urls: list[str]) -> list[str]:
+    """Sélectionne les URLs média à considérer en appliquant les limites locales."""
     if not media_urls:
         return []
 
     images = [u for u in media_urls if not _is_video(u)]
     videos = [u for u in media_urls if _is_video(u)]
 
-    # Appliquer les limites
     if len(images) > MAX_IMAGES:
         logger.warning(
             "Pub avec %d images — limite à %d (les %d premières conservées).",
@@ -109,11 +88,18 @@ def build_media_messages(media_urls: list[str]) -> list[LLMMessage]:
         )
         selected = selected[:MAX_MEDIA_FILES]
 
-    if not selected:
-        return []
+    return selected
 
-    # Un seul message multimodal avec tous les médias
-    return [LLMMessage(text="", media=selected)]
+
+def build_message_with_media(
+    prompt_text: str,
+    media_contents: list[MediaContent],
+) -> list[LLMMessage]:
+    """Assemble un message unique ordonné : texte puis médias binaires."""
+    parts = [TextPart(text=prompt_text)]
+    for media in media_contents:
+        parts.append(MediaPart(media=media.content, mime_type=media.mime_type))
+    return [LLMMessage(parts=parts)]
 
 
 def _is_video(url: str) -> bool:
@@ -125,27 +111,8 @@ def build_llm_messages(
     prompt_text: str,
     media_urls: list[str],
 ) -> list[LLMMessage]:
-    """Assemble les messages LLM finaux : prompt texte + médias.
-
-    Le prompt est dans le premier message. Si des médias sont présents,
-    ils sont ajoutés comme message supplémentaire (ou comme parts du même message).
-
-    Args:
-        prompt_text: Le prompt compilé (avec variables substituées).
-        media_urls: URLs des médias à attacher.
-
-    Returns:
-        Liste ordonnée de ``LLMMessage`` prête à passer à ``generate_structured()``.
-    """
-    text_message = LLMMessage(text=prompt_text, media=[])
-    media_messages = build_media_messages(media_urls)
-
-    if not media_messages:
-        return [text_message]
-
-    # Fusionner le texte et les médias dans un seul message pour Gemini
-    combined = LLMMessage(
-        text=prompt_text,
-        media=media_messages[0].media if media_messages else [],
-    )
-    return [combined]
+    """Assemble les messages LLM text-only ou à base d'URLs pour compatibilité."""
+    parts = [TextPart(text=prompt_text)]
+    for url in select_media_urls(media_urls):
+        parts.append(MediaPart(media=url))
+    return [LLMMessage(parts=parts)]

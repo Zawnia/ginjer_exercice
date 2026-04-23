@@ -4,7 +4,7 @@ import time
 from openai import OpenAI
 from pydantic import BaseModel
 
-from .base import LLMCallConfig, LLMMessage, LLMProvider, LLMResponse, TraceContext
+from .base import LLMCallConfig, LLMMessage, LLMProvider, LLMResponse, MediaPart, TextPart, TraceContext
 
 
 class OpenAIProvider(LLMProvider):
@@ -32,20 +32,26 @@ class OpenAIProvider(LLMProvider):
         oai_messages = []
         for msg in messages:
             content = []
-            if msg.text:
-                content.append({"type": "text", "text": msg.text})
-            for media in msg.media:
-                if isinstance(media, bytes):
-                    b64_img = base64.b64encode(media).decode('utf-8')
-                    content.append({
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{b64_img}"}
-                    })
-                elif isinstance(media, str) and (media.startswith("http://") or media.startswith("https://")):
-                    content.append({
-                        "type": "image_url",
-                        "image_url": {"url": media}
-                    })
+            for part in msg.parts:
+                if isinstance(part, TextPart):
+                    if part.text:
+                        content.append({"type": "text", "text": part.text})
+                    continue
+
+                if isinstance(part, MediaPart):
+                    media = part.media
+                    mime_type = part.mime_type or "image/jpeg"
+                    if isinstance(media, bytes):
+                        b64_img = base64.b64encode(media).decode("utf-8")
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime_type};base64,{b64_img}"},
+                        })
+                    elif isinstance(media, str) and (media.startswith("http://") or media.startswith("https://")):
+                        content.append({
+                            "type": "image_url",
+                            "image_url": {"url": media},
+                        })
             oai_messages.append({"role": "user", "content": content})
 
         start_time = time.time()

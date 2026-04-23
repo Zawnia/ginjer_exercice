@@ -10,9 +10,10 @@ Ordre d'exécution dans l'orchestrator (Phase 6) :
     Step 1 → Step 2 → (pour chaque produit) Step 3 → Step 4 → [Step 5 si besoin]
 """
 
-from . import step1_universe, step2_products, step3_classify, step4_name
+from . import orchestrator, step1_universe, step2_products, step3_classify, step4_name
 
 __all__ = [
+    "orchestrator",
     "step1_universe",
     "step2_products",
     "step3_classify",

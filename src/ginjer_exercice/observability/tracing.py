@@ -34,6 +34,10 @@ class TraceContext:
     def __init__(self, span: Any) -> None:
         self._span = span
 
+    @property
+    def trace_id(self) -> str | None:
+        return getattr(self._span, "trace_id", None) or getattr(self._span, "id", None)
+
     def update_output(self, output: Any) -> None:
         """Update the current observation output.
 
@@ -188,6 +192,10 @@ class TraceContext:
 
 class NullTraceContext:
     """No-op implementation matching the public ``TraceContext`` interface."""
+
+    @property
+    def trace_id(self) -> None:
+        return None
 
     def update_output(self, output: Any) -> None:
         """Ignore output updates when observability is disabled.

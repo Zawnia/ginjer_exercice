@@ -22,13 +22,18 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import httpx
+
+from ..config import get_settings
+from ..data_access.media_fetcher import MediaFetcher
 from ..llm.base import LLMCallConfig, LLMProvider
 from ..observability.prompts import PromptRegistry
 from ..observability.tracing import step_span
 from ..schemas.ad import Ad
+from ..schemas.media import MediaKind
 from ..schemas.products import Color, DetectedProduct
 from ..schemas.step_outputs import DetectedProductList, UniverseResult
-from ._helpers import build_llm_messages, build_texts_block
+from ._helpers import build_llm_messages, build_message_with_media, build_texts_block, select_media_urls
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +52,7 @@ def execute(
     llm_provider: LLMProvider,
     prompt_registry: PromptRegistry,
     trace: Any,
+    media_fetcher: MediaFetcher | None = None,
 ) -> list[DetectedProduct]:
     """Identifie tous les produits présents dans une publicité.
 
@@ -94,13 +100,17 @@ def execute(
         )
 
         # 3. Construire les messages multimodaux
-        messages = build_llm_messages(compiled, ad.media_urls)
+        messages = _build_step2_messages(
+            compiled,
+            ad.media_urls,
+            media_fetcher=media_fetcher,
+        )
 
         # 4. Configurer l'appel LLM
         llm_config = LLMCallConfig(
             model_name=prompt.config.get("model", "gemini-2.0-flash"),
             temperature=prompt.config.get("temperature", 0.1),
-            max_tokens=prompt.config.get("max_tokens", 3000),
+            max_tokens=prompt.config.get("max_tokens", 4000),
         )
 
         # 5. Appel LLM
@@ -131,6 +141,54 @@ def execute(
 
         span.update_output([p.model_dump() for p in products])
         return products
+
+
+def _build_step2_messages(
+    prompt_text: str,
+    media_urls: list[str],
+    *,
+    media_fetcher: MediaFetcher | None,
+) -> list:
+    selected_urls = select_media_urls(media_urls)
+    if not selected_urls:
+        return build_llm_messages(prompt_text, [])
+
+    fetcher = media_fetcher or _default_media_fetcher()
+    downloaded_images = []
+    for url in selected_urls:
+        if not url.startswith(("http://", "https://")):
+            logger.info("Step2 — média ignoré car URL non téléchargeable par MediaFetcher : %s", url)
+            continue
+
+        media = None
+        try:
+            media = fetcher.download(url)
+        except Exception as exc:
+            logger.warning("Step2 — téléchargement média échoué pour %s : %s", url, exc)
+            continue
+
+        if media.kind != MediaKind.IMAGE:
+            logger.info("Step2 — vidéo ignorée en P0 pour %s", url)
+            continue
+        downloaded_images.append(media)
+
+    if not downloaded_images:
+        logger.info("Step2 — aucun média image exploitable, fallback texte seul.")
+        return build_llm_messages(prompt_text, [])
+
+    return build_message_with_media(prompt_text, downloaded_images)
+
+
+def _default_media_fetcher() -> MediaFetcher:
+    settings = get_settings()
+    client = httpx.Client(timeout=max(settings.media_image_timeout, settings.media_video_timeout))
+    return MediaFetcher(
+        client=client,
+        max_size_bytes=settings.media_max_size_bytes,
+        image_timeout=settings.media_image_timeout,
+        video_timeout=settings.media_video_timeout,
+        max_retries=settings.media_max_retries,
+    )
 
 
 def _convert_and_filter(

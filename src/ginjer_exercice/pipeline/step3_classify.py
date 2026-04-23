@@ -174,8 +174,8 @@ def execute(
             )
 
             # Ajouter la réponse du LLM et le message correctif à la conversation
-            messages.append(LLMMessage(text=parsed.model_dump_json(), media=[]))
-            messages.append(LLMMessage(text=correction_msg, media=[]))
+            messages.append(LLMMessage.from_text(parsed.model_dump_json()))
+            messages.append(LLMMessage.from_text(correction_msg))
 
         # Toutes les tentatives ont échoué
         raise LLMValidationError(

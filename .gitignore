@@ -34,6 +34,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 uv.lock
+.uv-cache/
 .python-version
 .vscode/
 
@@ -187,4 +188,7 @@ pyrightconfig.json
 #skills
 .ai_skills/
 .agents
+
+#output
+output/
 
