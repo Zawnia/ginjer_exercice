@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ginjer_exercice.pipeline import step2_products
+from ginjer_exercice.observability.runtime_warnings import collect_runtime_warnings
 from ginjer_exercice.schemas.ad import Ad, AdText, Brand
 from ginjer_exercice.schemas.products import Color, DetectedProduct
 from ginjer_exercice.schemas.step_outputs import (
@@ -244,17 +245,19 @@ class TestStep2Execute:
             "https://example.com/video.mp4": fake_video_content("https://example.com/video.mp4"),
         })
 
-        step2_products.execute(
-            ad,
-            universe_result,
-            llm_provider=fake_llm,
-            prompt_registry=FakePromptRegistry(),
-            trace=FakeTraceSpan(),
-            media_fetcher=fetcher,
-        )
+        with collect_runtime_warnings() as warnings:
+            step2_products.execute(
+                ad,
+                universe_result,
+                llm_provider=fake_llm,
+                prompt_registry=FakePromptRegistry(),
+                trace=FakeTraceSpan(),
+                media_fetcher=fetcher,
+            )
 
         assert fetcher.downloaded_urls == ["https://example.com/video.mp4"]
         assert len(fake_llm.calls[0]["messages"][0].media) == 0
+        assert warnings == ["step2: video ignored (not supported in P0)", "step2: fallback to text-only, no usable image"]
 
     def test_falls_back_to_text_only_if_image_download_fails(
         self, chanel_ad, universe_result, single_product_list
@@ -262,14 +265,16 @@ class TestStep2Execute:
         fake_llm = FakeLLMProvider([single_product_list])
         fetcher = FakeMediaFetcher(errors={"https://example.com/n5.jpg": RuntimeError("download failed")})
 
-        step2_products.execute(
-            chanel_ad,
-            universe_result,
-            llm_provider=fake_llm,
-            prompt_registry=FakePromptRegistry(),
-            trace=FakeTraceSpan(),
-            media_fetcher=fetcher,
-        )
+        with collect_runtime_warnings() as warnings:
+            step2_products.execute(
+                chanel_ad,
+                universe_result,
+                llm_provider=fake_llm,
+                prompt_registry=FakePromptRegistry(),
+                trace=FakeTraceSpan(),
+                media_fetcher=fetcher,
+            )
 
         assert fetcher.downloaded_urls == ["https://example.com/n5.jpg"]
         assert len(fake_llm.calls[0]["messages"][0].media) == 0
+        assert warnings == ["step2: fallback to text-only, no usable image"]

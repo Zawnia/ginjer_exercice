@@ -2,6 +2,8 @@
 
 import sys
 from pathlib import Path
+
+import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -11,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ginjer_exercice.schemas.ad import Ad, Brand, AdText
 from ginjer_exercice.config import get_settings
+from ginjer_exercice.data_access.media_fetcher import MediaFetcher
 from ginjer_exercice.llm.factory import get_provider
 from ginjer_exercice.observability.prompts import PromptRegistry
 from ginjer_exercice.taxonomy.loader import load_taxonomy
@@ -75,13 +78,22 @@ def main():
             
         print("\n--- STEP 2: Détection des produits ---")
         try:
-            p_result = step2_products.execute(
-                ad, 
-                universe_result=u_result, 
-                llm_provider=llm, 
-                prompt_registry=registry, 
-                trace=trace
-            )
+            with httpx.Client(timeout=max(settings.media_image_timeout, settings.media_video_timeout)) as http_client:
+                media_fetcher = MediaFetcher(
+                    client=http_client,
+                    max_size_bytes=settings.media_max_size_bytes,
+                    image_timeout=settings.media_image_timeout,
+                    video_timeout=settings.media_video_timeout,
+                    max_retries=settings.media_max_retries,
+                )
+                p_result = step2_products.execute(
+                    ad,
+                    universe_result=u_result,
+                    llm_provider=llm,
+                    prompt_registry=registry,
+                    trace=trace,
+                    media_fetcher=media_fetcher,
+                )
             print(f"[OK] Détection terminée. Nombre de produits : {len(p_result)}")
         except Exception as e:
             print(f"[FAIL] Step 2 a échoué: {e}")

@@ -153,3 +153,22 @@ class ExtractedName(BaseModel):
         le=1.0,
         description="Confiance dans l'extraction (0 = très incertain, 1 = certain).",
     )
+
+
+class FallbackNameSuggestion(BaseModel):
+    """Structured fallback name suggestion returned by the Step 5 LLM."""
+
+    name: str | None = Field(
+        default=None,
+        description="Suggested product name. Null when evidence is insufficient.",
+    )
+    confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score for the suggested name.",
+    )
+    reasoning: str = Field(
+        ...,
+        description="Short evidence-based explanation supporting the suggestion.",
+    )

@@ -142,26 +142,34 @@ def process_ad(
 
     named_products = sum(1 for product in output.products if product.name_info and product.name_info.name)
     logger.info(
-        "process-ad completed: ad_id=%s products=%d names_found=%d needs_review=%s trace_id=%s",
+        "process-ad completed: ad_id=%s products=%d names_found=%d needs_review=%s quality_status=%s warnings=%d trace_id=%s",
         output.ad_id,
         len(output.products),
         named_products,
         output.needs_review,
+        output.quality_status,
+        len(output.warnings),
         output.trace_id,
     )
-    typer.echo(
-        "\n".join(
-            [
-                f"ad_id: {output.ad_id}",
-                f"brand: {output.brand.value}",
-                f"products: {len(output.products)}",
-                f"names_found: {named_products}",
-                f"needs_review: {output.needs_review}",
-                f"trace_id: {output.trace_id}",
-                f"sqlite_path: {resolved_db_path}",
-            ]
-        )
-    )
+    summary_lines = [
+        f"ad_id: {output.ad_id}",
+        f"brand: {output.brand.value}",
+        f"products: {len(output.products)}",
+        f"names_found: {named_products}",
+        f"needs_review: {output.needs_review}",
+        (
+            "Status: clean"
+            if output.quality_status == "clean"
+            else f"Status: degraded ({len(output.warnings)} warnings)"
+        ),
+        f"warnings: {len(output.warnings)}",
+        f"trace_id: {output.trace_id}",
+        f"sqlite_path: {resolved_db_path}",
+    ]
+    if output.quality_status == "degraded":
+        summary_lines.append("warning_details:")
+        summary_lines.extend(f"- {warning}" for warning in output.warnings)
+    typer.echo("\n".join(summary_lines))
 
 
 if __name__ == "__main__":

@@ -69,6 +69,14 @@ class PromptRegistry:
             "timestamp": time.time()
         }
 
+    def _load_yaml_data(self, name: str) -> dict[str, Any] | None:
+        filename = name.split("/")[-1] + ".yaml"
+        filepath = self.prompts_dir / filename
+        if not filepath.exists():
+            return None
+        with open(filepath, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
+
     def get(self, name: str, label: str = "production") -> ManagedPrompt:
         """Récupère un prompt par nom et label."""
         cache_key = self._get_cache_key(name, label)
@@ -84,6 +92,12 @@ class PromptRegistry:
                 config = lf_prompt.config if hasattr(lf_prompt, 'config') else {}
                 if config is None:
                     config = {}
+                yaml_data = self._load_yaml_data(name)
+                if yaml_data is not None:
+                    yaml_config = yaml_data.get("config", {})
+                    if "max_tokens" in yaml_config:
+                        config = dict(config)
+                        config["max_tokens"] = yaml_config["max_tokens"]
                 
                 managed = ManagedPrompt(
                     name=name,
@@ -103,14 +117,12 @@ class PromptRegistry:
 
     def _get_from_yaml(self, name: str, label: str) -> ManagedPrompt:
         """Charge le prompt depuis les fichiers YAML locaux."""
-        filename = name.split("/")[-1] + ".yaml" 
+        data = self._load_yaml_data(name)
+        filename = name.split("/")[-1] + ".yaml"
         filepath = self.prompts_dir / filename
-        
-        if not filepath.exists():
-            raise FileNotFoundError(f"Le prompt '{name}' n'est pas dans Langfuse et le fichier fallback {filepath} n'existe pas.")
 
-        with open(filepath, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
+        if data is None:
+            raise FileNotFoundError(f"Le prompt '{name}' n'est pas dans Langfuse et le fichier fallback {filepath} n'existe pas.")
 
         managed = ManagedPrompt(
             name=name,

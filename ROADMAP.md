@@ -1,253 +1,363 @@
-# ROADMAP — Projet Ginjer Exercice
+# ROADMAP - Projet Ginjer Exercice
 
-**État au 23 avril 2026**
+**Etat au 24 avril 2026**
 
 ## 1. Vue d'ensemble
 
-Pipeline multimodal de détection de produits dans des publicités de marques de luxe : Chanel, Dior, Louis Vuitton, Balenciaga, Maison Francis Kurkdjian.
+Pipeline de detection et de labellisation de produits dans des publicites de marques de luxe.
 
-- **Source de données** : BigQuery `ginjer-440122.ia_eng_interview.ads`
-- **Médias** : URLs publiques GCS
-- **Architecture** : couches strictement séparées
-  - `schemas/`
-  - `pipeline/`
-  - `data_access/`
-  - `llm/`
-  - `observability/`
-  - `web_search/`
+Marques ciblees :
+- Chanel
+- Dior
+- Louis Vuitton
+- Balenciaga
+- Maison Francis Kurkdjian
 
-**Règle d'or** : aucun SDK externe ne fuit hors de sa couche dédiée.
+Sources et composants principaux :
+- donnees ads : BigQuery `ginjer-440122.ia_eng_interview.ads`
+- medias : URLs publiques, principalement GCS
+- persistance de sortie : SQLite
+- observabilite : Langfuse SDK v4
+- provider LLM principal : Gemini
 
-**Stack technique** :
+Architecture en couches :
+- `schemas/`
+- `pipeline/`
+- `data_access/`
+- `llm/`
+- `observability/`
+- `taxonomy/`
+- `web_search/` (reserve pour la suite)
 
+Regle d'or :
+- aucun SDK externe ne doit fuir hors de sa couche dediee
+
+Stack technique actuelle :
 - Python 3.11+
 - Pydantic v2
-- `google-genai` (provider par défaut, choisi pour le multimodal natif images + vidéo)
-- Langfuse SDK v4
+- `google-genai`
 - `httpx`
 - SQLite
-- Docker Compose
+- Langfuse SDK v4
 
-## 2. État réel du projet
+## 2. Etat reel du projet
 
-### 2.1 Terminé et validé en exécution
+### 2.1 Termine et valide en execution
 
-- Schémas Pydantic complets et utilisés par tous les consommateurs.
+- Schemas Pydantic utilises par le pipeline et la persistance.
 - Taxonomies :
-  - Dior et MFK chargées depuis fichiers
-  - Chanel dérivée du CSV `product_categorisation`
-  - Louis Vuitton et Balenciaga générées via LLM
-  - Flow `refresh-taxonomy` opérationnel
-- Data access partiel :
-  - `bigquery_client.py` : fetch ads OK, validé sur l’ad `1000142752321014`
-  - `media_fetcher.py` : opérationnel
+  - Dior et MFK chargees depuis fichiers
+  - Chanel derivee du CSV `product_categorisation`
+  - Louis Vuitton et Balenciaga generees via LLM
+  - flow `refresh-taxonomy` operationnel
+- Data access :
+  - `bigquery_client.py` : fetch unitaire et fetch par marque operationnels
+  - `media_fetcher.py` : telechargement media operationnel
+  - `results_repository.py` : persistance SQLite active dans le flow produit
 - Abstraction LLM :
-  - `LLMProvider` (`base.py`)
-  - `gemini_provider.py` (Vertex AI, validé en production)
-  - factory model-agnostic
+  - `LLMProvider` generique
+  - `gemini_provider.py` valide en execution reelle
+  - support de messages ordonnes multi-parts (`text`, `media`)
   - structured outputs Pydantic fonctionnels
-- Observabilité Langfuse :
-  - wrapper `TraceContext` conforme à la règle d’or
-  - aucun SDK Langfuse hors de `observability/`
-  - traces, spans nestés, generations avec usage tokens et coûts
-  - 6 tests unitaires + 30 tests de steps passants
-- Steps pipeline 1 à 4 implémentés et validés end-to-end en mode text-only :
-  - **step1** : détection d’univers multi-univers
-  - **step2** : détection de produits (`DetectedProduct`)
-  - **step3** : classification taxonomique hiérarchique
-  - **step4** : extraction de nom explicite
-- Retry sur `ValidationError` fonctionnel dans `step3`.
-- Prompts Langfuse versionnés dans Langfuse Prompt Management, avec fallback YAML local.
-- Run E2E validé sur l’ad Chanel `1000142752321014` :
-  - 3 produits détectés
-  - 3 noms extraits
-  - 3 taxonomies valides
-  - 8 appels LLM tracés dans Langfuse avec coûts
+- Observabilite :
+  - `TraceContext` et spans pipeline operationnels
+  - traces, generations, usage et scores publies en best-effort
+  - warnings runtime collectes et rattaches au `PipelineOutput`
+- Steps pipeline 1 a 4 implementes :
+  - `step1_universe`
+  - `step2_products`
+  - `step3_classify`
+  - `step4_name`
+- Correction prompts :
+  - tous les `prompts/*.yaml` sont alignes a `max_tokens: 4000`
+- Multimodal P0 :
+  - `step2` telecharge les medias via `MediaFetcher`
+  - seules les images sont injectees au LLM
+  - les videos sont ignorees explicitement en P0
+  - fallback texte seul si aucune image exploitable n'est disponible
+- Orchestrateur minimal :
+  - `pipeline/orchestrator.py`
+  - enchaine `step1 -> step2 -> boucle(step3 -> step4) -> scoring -> persist`
+- CLI produit :
+  - commande `refresh-taxonomy`
+  - commande `process-ad`
+  - options globales `--verbose` et `--debug`
+- Documentation livree :
+  - `README.md`
+  - `docs/USAGE.md`
+  - `docs/DEPLOYMENT.md`
+- Validation E2E reelle disponible :
+  - `scripts/validate_process_ad_real_e2e.py`
+  - preuve sur BigQuery reel + media reel + LLM reel + orchestrateur reel + CLI reelle + SQLite reelle
 
 ### 2.2 Partiellement fait
 
-- **Multimodal** :
-  - `gemini_provider.py` a été choisi pour le multimodal natif
-  - le chemin images/vidéo n’est pas encore câblé dans les steps
-  - `real_pipeline_check.py` tourne actuellement avec `--text-only`
-  - `LLMMessage` doit être étendu pour supporter des content parts mixtes
-  - c’est le gap central du projet
-- **`results_repository`** :
-  - code SQLite présent dans `data_access/`
-  - non branché au flow principal
-  - aucune persistance lors du run E2E
-- **Scoring** :
-  - `taxonomy_coherence` est fait
-  - il manque la confidence agrégée et le `LLM-as-judge`
-  - `observability/scoring.py` doit être audité pour vérifier sa cohérence avec l’état actuel du code
-- **CLI** :
-  - `ginjer-exercice` est encore un stub affichant `Hello from ginjer-exercice!`
-  - seul `refresh-taxonomy` est câblé
-  - `process-ad` et `process-batch` manquent
-- **Tests d’intégration** :
-  - tests unitaires OK
-  - il manque un vrai test d’intégration E2E avec provider LLM fake
+- Multimodal :
+  - seul `step2` consomme des images telechargees
+  - `step1`, `step3` et `step4` restent text-only
+  - le support video n'est pas livre dans le flow produit
+- Scoring :
+  - `taxonomy_coherence` livre
+  - `confidence` agregee livree
+  - `llm_judge` non implemente
+- OpenAI provider :
+  - support du nouveau contrat multi-parts
+  - non valide en E2E reel
+  - pas de support video assume
+- Observabilite Langfuse :
+  - le besoin produit est couvert
+  - certains details restent pragmatiques et non completement harmonises avec la vision historique de la couche observability
+- Documentation deployment :
+  - le document est present
+  - l'infra applicative complete n'est pas encore livree
 
-### 2.3 Non commencé
+### 2.3 Non commence ou hors P0
 
-- **Orchestrator** (`pipeline/orchestrator.py`) :
-  - pas de flow principal intégré enchaînant  
-    `step1 -> step2 -> boucle {step3 -> step4 -> step5} -> scoring -> persist`
-  - aujourd’hui, `real_pipeline_check.py` joue le rôle de glue script
-- **Step 5 fallback** (`pipeline/step5_fallback.py`) :
-  - prévu pour les produits sans nom explicite
-  - `5a` : enrichissement LLM avec catalogue
-  - `5b` : vérification web
-  - ni les sous-étapes ni le routage ne sont implémentés
-- **Couche `web_search/`** :
-  - abstraction `WebSearchProvider` prévue pour `5b`
-  - non commencée
-- **Scoring `LLM-as-judge`** :
-  - prévu au design
-  - non implémenté
-- **Documentation** :
-  - README fonctionnel
-  - mais `docs/DEPLOYMENT.md`, `docs/USAGE.md` et les screenshots Langfuse restent à produire
-- **Infra** :
-  - `Dockerfile` applicatif
-  - `docker-compose.yml` Langfuse self-host
-  - `.env.example`
+- `step5_fallback.py`
+  - fallback catalogue / web non implemente
+- `web_search/`
+  - abstraction reservee pour `step5`
+- `process-batch`
+  - absent
+- scoring `LLM-as-judge`
+  - absent
+- Dockerfile applicatif
+  - absent
+- `docker-compose.yml` Langfuse self-host
+  - absent
 
-## 3. Dette technique et zones fragiles
+## 3. Validation executee a ce stade
 
-- **Bug 2 latent : hallucination de catégorie par le LLM**
-  - `step3` a réussi sur ce run grâce au retry
-  - la cause racine n’est pas traitée
-  - la correction 3 (`max_tokens -> 4000` dans tous les YAML) n’est pas encore appliquée
-  - à faire avant livraison pour stabiliser le comportement
-- **`openai_provider.py`**
-  - présent mais jamais exercé en E2E
-  - à documenter explicitement comme scaffolding, ou à retirer si hors scope
-- **`usage_details`**
-  - clés actuelles : `input_tokens` / `output_tokens`
-  - non canoniques par rapport à Langfuse v4 (`input` / `output` / `total`)
-  - les coûts remontent malgré tout, mais le mapping n’est pas idéal
-- **`observability/scoring.py`**
-  - signalé par un audit précédent
-  - non revérifié manuellement à ce stade
-- **Imports hétérogènes**
-  - mélange possible entre `ginjer_exercice...` et `src.ginjer_exercice...`
-  - signalé par audit, à vérifier
+### 3.1 Validation logicielle
 
-## 4. Backlog priorisé
+- tests unitaires sur :
+  - prompts
+  - contrat LLM multi-parts
+  - `step2` multimodal
+  - orchestrateur
+  - CLI
+  - repository
+- `compileall` / `py_compile` executes sur les fichiers critiques modifies
 
-### 4.1 Principe de priorisation
+### 3.2 Validation end-to-end
 
-L’objectif est de livrer un pipeline complet, fonctionnel et démontrable, quitte à garder certains axes volontairement partiels, à condition qu’ils soient explicitement documentés comme tels.
+Deux niveaux de validation existent :
 
-### 4.2 P0 — Critique pour livraison
+1. `scripts/e2e_process_ad_cli_multimodal.py`
+- smoke test d'integration locale
+- utile pour verifier le cablage, pas comme preuve forte terrain
 
-1. **Correction 3 — Bug 2 (`max_tokens`)**
-   - passer `max_tokens` à `4000` dans tous les prompts YAML
-   - quick win, faible coût, impact immédiat sur la stabilité
+2. `scripts/validate_process_ad_real_e2e.py`
+- validation reelle
+- BigQuery reel
+- media image reel
+- provider LLM reel
+- orchestrateur reel
+- CLI lancee en subprocess
+- persistance SQLite verifiee
 
-2. **Multimodal**
-   - câbler le chemin image dans `step2` (détection produits), qui est le step bénéficiant le plus du visuel
-   - étendre `LLMMessage` pour supporter des content parts mixtes
-   - utiliser `media_fetcher` pour charger l’image
-   - injecter l’image dans le prompt
-   - tester sur l’ad Chanel déjà disponible avec image
-   - c’est le sujet central de l’exercice
+Cas reel deja valide :
+- marque : `CHANEL`
+- `ad_id=1000142752321014`
 
-3. **Orchestrator minimal**
-   - créer `pipeline/orchestrator.py`
-   - enchaîner les steps
-   - appeler `results_repository` pour la persistance
-   - remplacer le script de vérification par une vraie entrée de production
+Ce script prouve explicitement :
+- que `step2` envoie bien une image binaire au LLM
+- que l'orchestrateur persiste
+- que la CLI produit un run complet
 
-4. **CLI `process-ad`**
-   - prendre un `ad_id`
-   - appeler l’orchestrator
-   - persister les résultats
-   - retourner un résumé d’exécution
+## 4. Dette technique et zones fragiles
 
-### 4.3 P1 — Important si le temps le permet
+### 4.1 Instabilite Gemini sur sorties structurees
 
-1. **Step 5 fallback**
-   - implémenter `5a` : LLM enrichi avec catalogue
-   - implémenter `5b` : vérification web si le temps le permet
-   - scope minimal acceptable : `5a` seul
-   - documenter clairement que `5b` est prévu architecturalement mais non implémenté le cas échéant
+Probleme observe en execution reelle :
+- Gemini renvoie parfois un `response.text` JSON tronque
+- erreurs typiques : `EOF while parsing a string` / `EOF while parsing a value`
+- touche au moins `UniverseResult` et `ProductClassification`
 
-2. **Scoring**
-   - ajouter une confidence agrégée
-   - auditer et corriger `observability/scoring.py`
-   - `taxonomy_coherence` est déjà disponible
+Etat actuel :
+- mitigation de reparation JSON en place dans `gemini_provider.py`
+- warning runtime explicite remonte dans `PipelineOutput.warnings`
+- logs diagnostiques enrichis
 
-3. **CLI `process-batch`**
-   - traitement de plusieurs ads
+Lecture rigoureuse :
+- le pipeline est plus resilient
+- mais la cause racine n'est pas resolue
+- un run avec reparation ne doit pas etre interprete comme parfaitement sain
 
-4. **Test d’intégration end-to-end**
-   - avec provider LLM fake
+Reference :
+- `.memory/gemini_structured_output_instability_2026-04-23.md`
 
-### 4.4 P2 — Bonus si la livraison est stabilisée
+### 4.2 Variance LLM inter-runs
 
-- Implémenter le scoring `LLM-as-judge`
-- Étendre le multimodal à d’autres steps :
-  - `step1` pour l’univers
-  - `step4` si pertinent
-- Corriger les clés `usage_details` pour conformité Langfuse v4
-- Finaliser ou retirer `openai_provider.py`
+Constat :
+- deux runs reels successifs sur une meme pub peuvent produire
+  - des univers differents
+  - des chemins taxonomiques differents
+  - des scores de confiance differents
 
-### 4.5 Documentation (en parallèle, de manière incrémentale)
+Impact :
+- acceptable pour une P0 demonstrable
+- insuffisant pour un niveau production stricte si l'on attend une forte reproductibilite
 
-- README d’usage avec commandes et exemples
-- `docs/DEPLOYMENT.md` avec Langfuse self-host
-- `docs/USAGE.md` avec flow pipeline + scoring
-- Section **Architecture** du README :
-  - schéma des couches
-  - rappel de la règle d’or
-- Section **Limitations & Extensions** :
-  - multimodal partiel
-  - `step5` fallback partiel
-  - `LLM-as-judge` non implémenté
-  - autres limites assumées
-- Screenshots Langfuse :
-  - traces nestées
-  - generations avec coûts
-  - prompts versionnés
+### 4.3 Multimodal encore partiel
 
-## 5. Historique des phases
+- `step2` seulement
+- videos ignorees
+- chemins media hors `http/https` non traites par le flux `MediaFetcher` P0
 
-### 5.1 Phases complétées
+### 4.4 Observability encore pragmatique
 
-- **2026-04-22** — Phase 0 : Bootstrap, Docker, config
-- **2026-04-22** — Phase 1 : Schémas Pydantic complets
-- **2026-04-22** — Phase 2 : Abstraction `LLMProvider` + implémentation Gemini
-- **2026-04-22** — Phase 3 : Taxonomies
-  - Dior
-  - MFK
-  - Chanel dérivée
-  - LV / Balenciaga générées
-- **2026-04-22** — Phase 4 : wiring initial observability
-  - client Langfuse
-  - `PromptRegistry`
-  - context managers
-- **2026-04-23** — Phase 5 : Steps 1 à 4 implémentés avec tests unitaires
-- **2026-04-23** — Data access partiel :
-  - BigQuery client
-  - media fetcher
-  - `results_repository` non branché
+- les besoins d'exploitation sont couverts
+- certaines conventions restent heterogenes :
+  - `usage_details` non totalement alignes avec le contrat Langfuse canonique
+  - publication de scores en best-effort seulement
 
-### 5.2 Phases en cours ou à venir
+### 4.5 Surface produit encore minimale
 
-- **Phase 5.5** — Fix observabilité Langfuse (en finalisation)
-  - commit 1 : `TraceContext` OK
-  - commit 2 : `log_generation` aligné contrat legacy OK
-  - commit 3 : `max_tokens` en cours
-- **Phase 6** — Orchestrator + Multimodal + CLI
-- **Phase 7** — Step 5 fallback + scoring complet
-- **Phase 8** — Docs, infra, polish
+- mono-ad uniquement
+- absence de fallback `step5`
+- absence de reprise sur erreur metier partielle
 
-## 6. Références
+## 5. Backlog priorise
 
-- Rapport d’audit du `2026-04-23` : `.memory/audit_2026-04-23.md`
-- Historique mémoire :
+### 5.1 Principe de priorisation
+
+Apres livraison de la P0, la priorite n'est plus de cabler le chemin critique, mais de :
+- stabiliser le comportement reel
+- rendre les runs plus auditables
+- reduire les zones de non-determinisme et les pansements techniques
+
+### 5.2 P0 - Livree
+
+La P0 de la section 4.2 initiale est consideree comme livree :
+
+1. Correction `max_tokens`
+- terminee
+
+2. Multimodal `step2` images only
+- termine
+
+3. Orchestrateur minimal
+- termine
+
+4. CLI `process-ad`
+- terminee
+
+Documentation en parallele :
+- `README.md`
+- `docs/USAGE.md`
+- `docs/DEPLOYMENT.md`
+- livree
+
+### 5.3 P0.5 - Stabilisation immediate
+
+1. Diagnostic racine du probleme Gemini structured output
+- mesurer finement les cas d'echec
+- comparer `response.parsed` vs `response.text`
+- comparer mode `response_schema` vs JSON texte brut
+- definir une politique produit claire pour les runs "repares"
+
+2. Instrumentation qualite
+- consolider le suivi des `warnings`
+- exposer clairement les runs degrades dans les validations et les docs
+- eventuellement faire evoluer `needs_review` ou un flag qualite dedie
+
+3. Validation repetee sur corpus fixe
+- rejouer un petit corpus d'ads reelles
+- mesurer stabilite, taux de warnings, variance taxonomique
+
+### 5.4 P1 - Important
+
+1. `step5` fallback
+- `5a` catalogue enrichi par LLM
+- `5b` verification web si le temps le permet
+
+2. `process-batch`
+- traitement multi-ads
+
+3. Extension multimodale
+- etendre le visuel a d'autres steps si le gain est demontre
+
+4. Durcissement observability
+- harmoniser `usage_details`
+- clarifier la semantique des warnings et scores
+
+5. OpenAI provider
+- soit validation reelle et documentation claire
+- soit declassement explicite comme scaffolding
+
+### 5.5 P2 - Bonus
+
+- scoring `LLM-as-judge`
+- support video si utile et justifie
+- infra complete :
+  - Dockerfile
+  - `docker-compose.yml`
+  - packaging deploiement plus propre
+
+## 6. Documentation et contrat produit
+
+### 6.1 Point d'entree canonique
+
+Le point d'entree produit P0 est :
+- `ginjer_exercice.cli process-ad <ad_id>`
+
+### 6.2 Limitations assumees
+
+- pas de `step5`
+- pas de `process-batch`
+- pas de `llm_judge`
+- multimodal partiel
+- OpenAI non valide en E2E reel
+- pipeline sensible a la variance du provider Gemini
+
+### 6.3 Ce qui est considere comme vrai a date
+
+- le pipeline tient en bout en bout sur un cas reel
+- la persistance SQLite est branchee
+- la CLI n'est plus un stub
+- la documentation de base existe
+- la stabilite qualitative n'est pas encore au niveau d'un produit totalement industrialise
+
+## 7. Historique des phases
+
+### 7.1 Phases completees
+
+- **2026-04-22** - Phase 0 : bootstrap et configuration initiale
+- **2026-04-22** - Phase 1 : schemas Pydantic
+- **2026-04-22** - Phase 2 : abstraction `LLMProvider` + Gemini
+- **2026-04-22** - Phase 3 : taxonomies
+- **2026-04-22** - Phase 4 : wiring initial observability
+- **2026-04-23** - Phase 5 : steps 1 a 4
+- **2026-04-23** - Phase 5.5 : data access utilisable
+- **2026-04-23 / 2026-04-24** - Phase 6 : livraison P0
+  - prompts `max_tokens`
+  - multimodal `step2`
+  - orchestrateur
+  - CLI `process-ad`
+  - docs
+  - validations E2E
+
+### 7.2 Phase actuelle
+
+- **Phase 6.5** - Stabilisation post-P0
+  - investigation structured output Gemini
+  - normalisation des signaux qualite
+  - durcissement production
+
+### 7.3 Phases a venir
+
+- **Phase 7** - fallback `step5` + batch + durcissement
+- **Phase 8** - scoring avance, infra complete, polish final
+
+## 8. References
+
+- source de verite historique :
+  - `.memory/audit_2026-04-23.md`
+  - `.memory/data_access.md`
   - `.memory/phase3_implementation.md`
   - `.memory/phase4_observability.md`
-  - `.memory/data_access.md`
+- cartographie P0 :
+  - `.memory/p0_implementation_map_2026-04-23.md`
+- note technique sur l'instabilite Gemini :
+  - `.memory/gemini_structured_output_instability_2026-04-23.md`

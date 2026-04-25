@@ -24,6 +24,7 @@ import sys
 import time
 from pathlib import Path
 
+import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -35,6 +36,7 @@ from google.cloud import bigquery
 
 from ginjer_exercice.config import get_settings
 from ginjer_exercice.data_access.bigquery_client import BigQueryClient
+from ginjer_exercice.data_access.media_fetcher import MediaFetcher
 from ginjer_exercice.llm.factory import get_provider
 from ginjer_exercice.observability.prompts import PromptRegistry
 from ginjer_exercice.observability.tracing import pipeline_trace
@@ -146,13 +148,22 @@ def process_ad(
         # ── Step 2: Produits ──────────────────────────────
         print("\n  [STEP 2] Detection des produits...")
         try:
-            products = step2_products.execute(
-                working_ad,
-                u_result,
-                llm_provider=llm,
-                prompt_registry=registry,
-                trace=trace,
-            )
+            with httpx.Client(timeout=max(get_settings().media_image_timeout, get_settings().media_video_timeout)) as http_client:
+                media_fetcher = MediaFetcher(
+                    client=http_client,
+                    max_size_bytes=get_settings().media_max_size_bytes,
+                    image_timeout=get_settings().media_image_timeout,
+                    video_timeout=get_settings().media_video_timeout,
+                    max_retries=get_settings().media_max_retries,
+                )
+                products = step2_products.execute(
+                    working_ad,
+                    u_result,
+                    llm_provider=llm,
+                    prompt_registry=registry,
+                    trace=trace,
+                    media_fetcher=media_fetcher,
+                )
             result["llm_calls"] += 1
             print(f"    -> {len(products)} produit(s) detecte(s)")
         except Exception as e:

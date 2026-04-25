@@ -319,6 +319,7 @@ def _run_orchestrator_validation(
     _safe_print(f"brand: {output.brand.value}")
     _safe_print(f"products: {len(output.products)}")
     _safe_print(f"needs_review: {output.needs_review}")
+    _safe_print(f"warnings: {len(output.warnings)}")
     _safe_print(f"trace_id: {output.trace_id}")
     _safe_print(f"taxonomy_coherence: {output.scores.taxonomy_coherence}")
     _safe_print(f"confidence: {output.scores.confidence}")
@@ -392,7 +393,7 @@ def _run_cli_validation(
         )
 
     stdout_map = _parse_cli_stdout(result.stdout)
-    required_keys = {"ad_id", "brand", "products", "needs_review", "trace_id", "sqlite_path"}
+    required_keys = {"ad_id", "brand", "products", "needs_review", "warnings", "trace_id", "sqlite_path"}
     missing_keys = sorted(required_keys - set(stdout_map))
     if missing_keys:
         raise RuntimeError(f"CLI stdout is missing expected keys: {missing_keys}")
@@ -402,6 +403,7 @@ def _run_cli_validation(
     _safe_print(f"brand: {persisted.brand.value}")
     _safe_print(f"products: {len(persisted.products)}")
     _safe_print(f"needs_review: {persisted.needs_review}")
+    _safe_print(f"warnings: {len(persisted.warnings)}")
     _safe_print(f"taxonomy_coherence: {persisted.scores.taxonomy_coherence}")
     _safe_print(f"confidence: {persisted.scores.confidence}")
     _safe_print(f"sqlite_path: {db_path}")

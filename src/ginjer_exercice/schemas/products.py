@@ -39,7 +39,7 @@ class ProductClassification(BaseModel):
 class ProductName(BaseModel):
     """Sortie de l'Étape 4 ou 5 : Le nom final du produit."""
     name: str | None = None
-    source: Literal["explicit", "fallback_llm", "fallback_web"]
+    source: Literal["explicit", "fallback_enriched", "fallback_web", "fallback_failed", "fallback_llm"]
     confidence: float = Field(..., ge=0.0, le=1.0)
     needs_review: bool
     sources_consulted: list[str] = Field(default_factory=list)

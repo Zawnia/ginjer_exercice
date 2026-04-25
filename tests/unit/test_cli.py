@@ -55,6 +55,7 @@ def test_process_ad_fetches_and_runs_orchestrator(monkeypatch) -> None:
             ad_id=ad.platform_ad_id,
             brand=ad.brand,
             products=[],
+            warnings=[],
             scores=ScoreReport(taxonomy_coherence=0.0, confidence=0.0, llm_judge=None),
             trace_id="trace-123",
         ),
@@ -66,4 +67,6 @@ def test_process_ad_fetches_and_runs_orchestrator(monkeypatch) -> None:
     assert captured["ad_id"] == "ad-42"
     assert "ad_id: ad-42" in result.stdout
     assert "trace_id: trace-123" in result.stdout
+    assert "Status: clean" in result.stdout
+    assert "warnings: 0" in result.stdout
     assert f"sqlite_path: {workspace_tmp / 'custom.db'}" in result.stdout

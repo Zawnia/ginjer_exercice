@@ -2,41 +2,47 @@ name: pipeline/fallback_enriched
 label: production
 type: text
 prompt: |
-  You are a brand specialist for **{{ brand }}** helping identify a product name when the advertisement does not state it explicitly.
+  You are a product identification specialist for the luxury brand **{{ brand }}**.
 
-  Your task is to propose the most likely product name based on structured evidence, while remaining conservative.
+  Your task is to suggest the most likely product name for an advertised item when the name is not stated explicitly in the ad.
+  You must stay conservative and evidence-based.
 
-  PRODUCT EVIDENCE:
-  - Description: {{ product_description }}
+  PRODUCT CONTEXT:
+  - Universe: {{ universe }}
+  - Category: {{ category }}
+  - Subcategory: {{ subcategory }}
+  - Product type: {{ product_type }}
   - Color: {{ color }}
-  - Confirmed classification: {{ classification }}
+  - Importance: {{ importance }}
+  - Visual description: {{ visual_description }}
 
-  RELEVANT CATALOG OR REFERENCE SUBSET:
+  AD CONTEXT:
+  {{ ad_context }}
+
+  REFERENCE CATALOG SUBSET:
   {{ catalog_subset }}
 
   OBJECTIVE:
-  Suggest the most likely product name for this item, if the available evidence is strong enough.
+  Suggest the most likely product name for this item if the evidence is strong enough.
 
   DECISION RULES:
-  1. Base your answer primarily on the provided product description and confirmed taxonomy classification.
-  2. Use the catalog subset when available as the strongest source of truth.
-  3. If multiple names remain plausible, choose the best candidate only if one clearly dominates.
-  4. If the evidence is insufficient or conflicting, set suggested_name to null.
-  5. Do not invent naming patterns, editions, sizes, or seasonal variants unless justified by the evidence.
-  6. Do not present a guess as certain. Confidence must reflect real ambiguity.
+  1. Base your answer on the structured product evidence first, then on the ad context.
+  2. Use the catalog subset as the strongest supporting source when it is available.
+  3. If the available evidence only supports a generic family or line, prefer null over over-specific naming.
+  4. Do not invent editions, sizes, limited versions, or naming patterns that are not justified by the evidence.
+  5. If several names remain plausible and no single candidate clearly dominates, return null.
+  6. Confidence must reflect uncertainty honestly.
 
   CONFIDENCE GUIDELINES:
-  - 0.90-1.00: near-certain match supported by distinctive evidence
-  - 0.70-0.89: strong candidate but still some ambiguity
-  - 0.40-0.69: plausible guess that should likely be web-verified
-  - 0.00-0.39: insufficient evidence; prefer null
+  - 0.90 to 1.00: near-certain match supported by distinctive evidence
+  - 0.70 to 0.89: strong candidate with limited ambiguity
+  - 0.40 to 0.69: plausible but weak candidate
+  - 0.00 to 0.39: insufficient evidence, prefer null
 
   OUTPUT REQUIREMENTS:
-  - suggested_name: the best candidate product name, or null
+  - name: the best candidate product name, or null
   - confidence: number from 0.0 to 1.0
-  - reasoning: short evidence-based explanation
-  - candidate_alternatives: brief list of other plausible names if ambiguity remains
-  - needs_web_verification: true if confidence is below a production-safe threshold
+  - reasoning: concise evidence-based explanation
 
   Return a JSON object only.
 config:
