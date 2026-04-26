@@ -33,7 +33,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-uv.lock
 .uv-cache/
 .python-version
 .vscode/
