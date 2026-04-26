@@ -5,7 +5,9 @@ from ginjer_exercice.observability.runtime_warnings import collect_runtime_warni
 from ginjer_exercice.observability.tracing import NullTraceContext
 from ginjer_exercice.pipeline.step5_fallback import step5_fallback
 from ginjer_exercice.schemas.ad import Brand
-from ginjer_exercice.schemas.products import Color, DetectedProduct, ProductClassification
+from ginjer_exercice.schemas.pipeline import PipelineOutput
+from ginjer_exercice.schemas.products import Color, DetectedProduct, FinalProductLabel, ProductClassification
+from ginjer_exercice.schemas.scores import ScoreReport
 from ginjer_exercice.schemas.step_outputs import FallbackNameSuggestion
 from ginjer_exercice.web_search.null_provider import NullWebSearchProvider
 
@@ -42,7 +44,7 @@ def _sample_classification() -> ProductClassification:
 
 
 def test_step5_prompt_receives_catalog_subset() -> None:
-    fake_llm = FakeLLMProvider([FallbackNameSuggestion(name="CHANEL N°5", confidence=0.95, reasoning="catalog match")])
+    fake_llm = FakeLLMProvider([FallbackNameSuggestion(name="CHANEL N5", confidence=0.95, reasoning="catalog match")])
     registry = FakePromptRegistry(
         prompt_override=(
             "Brand={{brand}}\nUniverse={{universe}}\nCategory={{category}}\nSubcategory={{subcategory}}\n"
@@ -71,7 +73,7 @@ def test_step5_prompt_receives_catalog_subset() -> None:
 
 
 def test_step5_with_null_catalog_provider_does_not_fail() -> None:
-    fake_llm = FakeLLMProvider([FallbackNameSuggestion(name="CHANEL N°5", confidence=0.95, reasoning="strong fit")])
+    fake_llm = FakeLLMProvider([FallbackNameSuggestion(name="CHANEL N5", confidence=0.95, reasoning="strong fit")])
 
     result = step5_fallback(
         product=_sample_product(),
@@ -87,33 +89,11 @@ def test_step5_with_null_catalog_provider_does_not_fail() -> None:
         web_search_provider=NullWebSearchProvider(),
     )
 
-    assert result.name == "CHANEL N°5"
+    assert result.name == "CHANEL N5"
     assert "Catalog=[]" in fake_llm.calls[0]["messages"][0].text
 
 
-def test_step5_high_confidence_suggestion_does_not_need_review() -> None:
-    result = step5_fallback(
-        product=_sample_product(),
-        classification=_sample_classification(),
-        brand=Brand.CHANEL,
-        ad_context="The icon of fragrance.",
-        llm_provider=FakeLLMProvider(
-            [FallbackNameSuggestion(name="CHANEL N°5", confidence=0.95, reasoning="strong fit")]
-        ),
-        prompt_registry=FakePromptRegistry(
-            prompt_override="Visual={{visual_description}}\nCatalog={{catalog_subset}}\n"
-        ),
-        trace_context=NullTraceContext(),
-        catalog_provider=NullCatalogProvider(),
-        web_search_provider=NullWebSearchProvider(),
-    )
-
-    assert result.name == "CHANEL N°5"
-    assert result.source == "fallback_enriched"
-    assert result.needs_review is False
-
-
-def test_step5_low_confidence_suggestion_adds_warning() -> None:
+def test_step5_high_confidence_suggestion_adds_fallback_warning() -> None:
     with collect_runtime_warnings() as warnings:
         result = step5_fallback(
             product=_sample_product(),
@@ -121,7 +101,7 @@ def test_step5_low_confidence_suggestion_adds_warning() -> None:
             brand=Brand.CHANEL,
             ad_context="The icon of fragrance.",
             llm_provider=FakeLLMProvider(
-                [FallbackNameSuggestion(name="CHANEL N°5", confidence=0.5, reasoning="weak fit")]
+                [FallbackNameSuggestion(name="CHANEL N5", confidence=0.95, reasoning="strong fit")]
             ),
             prompt_registry=FakePromptRegistry(
                 prompt_override="Visual={{visual_description}}\nCatalog={{catalog_subset}}\n"
@@ -131,7 +111,81 @@ def test_step5_low_confidence_suggestion_adds_warning() -> None:
             web_search_provider=NullWebSearchProvider(),
         )
 
-    assert result.name == "CHANEL N°5"
+    assert result.name == "CHANEL N5"
+    assert result.source == "fallback_enriched"
+    assert result.needs_review is False
+    assert warnings == ["step5: name resolved via fallback (confidence=0.95, source=fallback_enriched)"]
+
+
+def test_step5_low_confidence_suggestion_adds_warning_and_needs_review() -> None:
+    with collect_runtime_warnings() as warnings:
+        result = step5_fallback(
+            product=_sample_product(),
+            classification=_sample_classification(),
+            brand=Brand.CHANEL,
+            ad_context="The icon of fragrance.",
+            llm_provider=FakeLLMProvider(
+                [FallbackNameSuggestion(name="CHANEL N5", confidence=0.5, reasoning="weak fit")]
+            ),
+            prompt_registry=FakePromptRegistry(
+                prompt_override="Visual={{visual_description}}\nCatalog={{catalog_subset}}\n"
+            ),
+            trace_context=NullTraceContext(),
+            catalog_provider=NullCatalogProvider(),
+            web_search_provider=NullWebSearchProvider(),
+        )
+
+    assert result.name == "CHANEL N5"
     assert result.source == "fallback_enriched"
     assert result.needs_review is True
-    assert warnings == ["step5a: low confidence name, flagged for review"]
+    assert warnings == [
+        "step5: low confidence name, flagged for review",
+        "step5: name resolved via fallback (confidence=0.50, source=fallback_enriched)",
+    ]
+
+
+def test_step5_null_suggestion_fails_and_marks_pipeline_for_review() -> None:
+    product = _sample_product()
+    classification = _sample_classification()
+
+    with collect_runtime_warnings() as warnings:
+        result = step5_fallback(
+            product=product,
+            classification=classification,
+            brand=Brand.CHANEL,
+            ad_context="The icon of fragrance.",
+            llm_provider=FakeLLMProvider(
+                [FallbackNameSuggestion(name=None, confidence=0.0, reasoning="no distinctive model evidence")]
+            ),
+            prompt_registry=FakePromptRegistry(
+                prompt_override="Visual={{visual_description}}\nCatalog={{catalog_subset}}\n"
+            ),
+            trace_context=NullTraceContext(),
+            catalog_provider=NullCatalogProvider(),
+            web_search_provider=NullWebSearchProvider(),
+        )
+
+    output = PipelineOutput(
+        ad_id="ad-null-step5",
+        brand=Brand.CHANEL,
+        products=[
+            FinalProductLabel(
+                detected=product,
+                classification=classification,
+                name_info=result,
+            )
+        ],
+        warnings=list(warnings),
+        scores=ScoreReport(),
+        trace_id="trace-test",
+    )
+
+    assert result.name is None
+    assert result.source == "fallback_failed"
+    assert result.confidence == 0.0
+    assert result.needs_review is True
+    assert warnings == [
+        "step5: could not identify product name",
+        "step5: name resolved via fallback (confidence=0.00, source=fallback_failed)",
+    ]
+    assert output.needs_review is True

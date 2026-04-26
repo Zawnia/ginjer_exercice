@@ -96,6 +96,7 @@ def run_ad(
                         product=product,
                         classification=classification,
                         brand=ad.brand,
+                        ad_id=ad.platform_ad_id,
                         ad_context=ad_context,
                         llm_provider=llm_provider,
                         prompt_registry=prompt_registry,
